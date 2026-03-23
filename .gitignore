@@ -1,0 +1,40 @@
+# Build files
+build/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Data
+data/
+platforms/
+shared/
+installer/
+
+# 保留重要的配置文件
+!config.json
+!version.json
+!github_config.py
+!release.py
+
+# Temporary files
+*.tmp
+*.bak
+
+# Environment
+.env
+.venv
+env/

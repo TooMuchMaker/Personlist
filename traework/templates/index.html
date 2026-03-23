@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRAEWORK - 个人管理平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app-container { display: flex; height: 100vh; }
+        .sidebar {
+            width: 80px;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .nav-icon {
+            width: 56px;
+            height: 56px;
+            margin: 8px 0;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.1);
+        }
+        .nav-icon:hover { background: rgba(255,255,255,0.25); transform: scale(1.1); }
+        .nav-icon.active { background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f5f7fa;
+            overflow: hidden;
+        }
+        .content-header {
+            padding: 24px 32px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .content-header h2 {
+            font-size: 1.8rem;
+            color: #333;
+            font-weight: 700;
+        }
+        .content-body { flex: 1; overflow: auto; padding: 24px 32px; }
+        .page { display: none; height: 100%; }
+        .page.active { display: block; }
+        
+        .fab-add {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fab-add:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5); }
+        
+        .item-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .item-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .item-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .card-title { font-size: 1.3rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+        .card-desc { font-size: 0.95rem; color: #666; line-height: 1.5; }
+        .card-meta { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .meta-tag {
+            padding: 6px 14px;
+            background: #f0f4ff;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .meta-tag.high { background: #fff0f0; color: #e74c3c; }
+        .meta-tag.medium { background: #fff9e6; color: #f39c12; }
+        .meta-tag.low { background: #e8f5e9; color: #27ae60; }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .action-btn:hover { transform: scale(1.05); }
+        .action-btn.edit { background: #e8f4fd; color: #1976d2; }
+        .action-btn.done { background: #e8f5e9; color: #2e7d32; }
+        .action-btn.delete { background: #ffebee; color: #c62828; }
+        .action-btn.sync { background: #fff3e0; color: #ef6c00; }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60%;
+            color: #999;
+        }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-text { font-size: 1.2rem; font-weight: 500; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-title { font-size: 1.5rem; font-weight: 700; color: #333; margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; color: #555; font-weight: 500; font-size: 0.95rem; }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+        .form-textarea { min-height: 100px; resize: vertical; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+        .modal-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-btn.cancel { background: #f5f5f5; color: #666; }
+        .modal-btn.save { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .modal-btn:hover { transform: scale(1.05); }
+        
+        .tabs { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: white;
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .tab:hover { transform: translateY(-2px); }
+        .tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+        
+        .home-view { text-align: center; }
+        .home-title { font-size: 2.5rem; font-weight: 700; color: #333; margin-bottom: 8px; }
+        .home-subtitle { font-size: 1.1rem; color: #666; margin-bottom: 40px; }
+        .home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 700px; margin: 0 auto; }
+        .home-card {
+            background: white;
+            padding: 32px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .home-card:hover { transform: translateY(-8px); box-shadow: 0 12px 35px rgba(0,0,0,0.15); }
+        .home-card-icon { font-size: 48px; margin-bottom: 16px; }
+        .home-card-title { font-size: 1.3rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+        .home-card-desc { font-size: 0.95rem; color: #888; }
+        
+        .toast {
+            position: fixed;
+            bottom: 110px;
+            right: 32px;
+            background: #333;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 2000;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="nav-icon active" onclick="showPage('home')" title="主页">🏠</div>
+            <div class="nav-icon" onclick="showPage('plan')" title="计划">📅</div>
+            <div class="nav-icon" onclick="showPage('course')" title="课程">📚</div>
+            <div class="nav-icon" onclick="showPage('algorithm')" title="算法">💻</div>
+            <div class="nav-icon" onclick="showPage('project')" title="项目">📁</div>
+            <div style="flex:1;"></div>
+            <div class="nav-icon" onclick="showPage('settings')" title="设置">⚙️</div>
+        </div>
+        <div class="main-content">
+            <div class="content-header">
+                <h2 id="page-title">欢迎回来</h2>
+            </div>
+            <div class="content-body">
+                <div id="page-home" class="page active">
+                    <div class="home-view">
+                        <div class="home-title">TRAEWORK</div>
+                        <div class="home-subtitle">简单、直观的个人管理平台</div>
+                        <div class="home-grid">
+                            <div class="home-card" onclick="showPage('plan')">
+                                <div class="home-card-icon">📅</div>
+                                <div class="home-card-title">计划管理</div>
+                                <div class="home-card-desc">管理你的日常计划</div>
+                            </div>
+                            <div class="home-card" onclick="showPage('course')">
+                                <div class="home-card-icon">📚</div>
+                                <div class="home-card-title">学校课程</div>
+                                <div class="home-card-desc">课程和作业管理</div>
+                            </div>
+                            <div class="home-card" onclick="showPage('algorithm')">
+                                <div class="home-card-icon">💻</div>
+                                <div class="home-card-title">信竞知识</div>
+                                <div class="home-card-desc">算法模板和题目</div>
+                            </div>
+                            <div class="home-card" onclick="showPage('project')">
+                                <div class="home-card-icon">📁</div>
+                                <div class="home-card-title">项目管理</div>
+                                <div class="home-card-desc">原创和收藏项目</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="page-plan" class="page">
+                    <div class="tabs">
+                        <div class="tab active" onclick="filterPlans('all')">全部</div>
+                        <div class="tab" onclick="filterPlans('long_term')">长期</div>
+                        <div class="tab" onclick="filterPlans('mid_term')">中期</div>
+                        <div class="tab" onclick="filterPlans('short_term')">短期</div>
+                    </div>
+                    <div id="plan-list"></div>
+                </div>
+                
+                <div id="page-course" class="page">
+                    <div id="course-list"></div>
+                </div>
+                
+                <div id="page-algorithm" class="page">
+                    <div class="tabs">
+                        <div class="tab active" onclick="showAlgo('templates')">模板</div>
+                        <div class="tab" onclick="showAlgo('problems')">题目</div>
+                    </div>
+                    <div id="algo-list"></div>
+                </div>
+                
+                <div id="page-project" class="page">
+                    <div class="tabs">
+                        <div class="tab active" onclick="filterProjects('all')">全部</div>
+                        <div class="tab" onclick="filterProjects('original')">原创</div>
+                        <div class="tab" onclick="filterProjects('collected')">收藏</div>
+                    </div>
+                    <div id="project-list"></div>
+                </div>
+                
+                <div id="page-settings" class="page">
+                    <div class="item-card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">🚀 更新检查</div>
+                                <div class="card-desc">检查并安装最新版本</div>
+                            </div>
+                        </div>
+                        <div id="update-section" style="margin-top: 16px;">
+                            <div id="update-status" style="margin-bottom: 16px;">
+                                <span style="color: #666;">正在加载版本信息...</span>
+                            </div>
+                            <button class="btn-add" onclick="checkForUpdates()" style="width:100%;justify-content:center;">
+                                🔍 检查更新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="item-card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">ℹ️ 关于</div>
+                                <div class="card-desc">TRAEWORK 个人管理平台</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <p style="color: #666; margin-bottom: 8px;">当前版本: <span id="current-version" style="font-weight: 600; color: #333;">1.0.0</span></p>
+                            <p style="color: #888; font-size: 0.9rem;">简单、直观的个人管理平台</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button id="fab-add" class="fab-add">+</button>
+    
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title">添加</div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const API = 'http://127.0.0.1:5000/api';
+        let filter = { plan: 'all', project: 'all', algo: 'templates' };
+        let currentPage = 'home';
+        
+        const pages = { home: '欢迎回来', plan: '计划管理', course: '学校课程', algorithm: '信竞知识', project: '项目管理', settings: '设置' };
+        const fabShowOn = ['plan', 'course', 'algorithm', 'project'];
+        
+        function showPage(id) {
+            currentPage = id;
+            document.querySelectorAll('.nav-icon').forEach(n => n.classList.remove('active'));
+            event.target.closest('.nav-icon')?.classList.add('active');
+            document.getElementById('page-title').textContent = pages[id];
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + id).classList.add('active');
+            document.getElementById('fab-add').style.display = fabShowOn.includes(id) ? 'flex' : 'none';
+            if (id === 'plan') loadPlans();
+            if (id === 'course') loadCourses();
+            if (id === 'algorithm') loadAlgo();
+            if (id === 'project') loadProjects();
+            if (id === 'settings') loadSettings();
+        }
+        
+        document.getElementById('fab-add').onclick = function() {
+            if (currentPage === 'plan') showAddPlan();
+            else if (currentPage === 'course') showAddCourse();
+            else if (currentPage === 'algorithm') showAddAlgo();
+            else if (currentPage === 'project') showAddProject();
+        };
+        
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+        
+        function showModal(title, body) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').innerHTML = body;
+            document.getElementById('modal').classList.add('show');
+        }
+        
+        function closeModal() { document.getElementById('modal').classList.remove('show'); }
+        document.getElementById('modal').onclick = function(e) { if (e.target === this) closeModal(); };
+        
+        let currentEditingId = null;
+        
+        async function loadPlans() {
+            const url = filter.plan === 'all' ? `${API}/plan/plans` : `${API}/plan/plans?type=${filter.plan}`;
+            const res = await fetch(url);
+            const plans = await res.json();
+            const el = document.getElementById('plan-list');
+            if (!plans.length) {
+                el.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">还没有计划，点击右下角添加</div></div>';
+                return;
+            }
+            el.innerHTML = plans.map(p => `
+                <div class="item-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${p.title}</div>
+                            ${p.description ? `<div class="card-desc">${p.description}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="card-meta">
+                        <span class="meta-tag ${p.priority}">${p.priority === 'high' ? '🔥 高优先级' : p.priority === 'medium' ? '📌 中优先级' : '✨ 低优先级'}</span>
+                        ${p.type === 'long_term' ? '<span class="meta-tag">🎯 长期</span>' : p.type === 'mid_term' ? '<span class="meta-tag">📊 中期</span>' : '<span class="meta-tag">⚡ 短期</span>'}
+                        ${p.end_date ? `<span class="meta-tag">📅 ${p.end_date}</span>` : ''}
+                        ${p.source ? `<span class="meta-tag">📍 ${p.source.name}</span>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn edit" onclick="showEditPlan('${p.id}', '${p.type}')">✏️ 编辑</button>
+                        ${p.status !== 'completed' ? `<button class="action-btn done" onclick="completePlan('${p.id}')">✅ 完成</button>` : ''}
+                        <button class="action-btn sync" onclick="syncToPlanFromPlan('${p.id}')">🔗 同步</button>
+                        <button class="action-btn delete" onclick="deletePlan('${p.id}')">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterPlans(type) {
+            filter.plan = type;
+            document.querySelectorAll('#page-plan .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadPlans();
+        }
+        
+        function showAddPlan() {
+            currentEditingId = null;
+            showModal('添加计划', `
+                <div class="form-group"><label class="form-label">计划标题</label><input class="form-input" id="plan-title" placeholder="输入计划标题"></div>
+                <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="plan-desc" placeholder="简单描述一下..."></textarea></div>
+                <div class="form-group"><label class="form-label">类型</label><select class="form-select" id="plan-type"><option value="short_term">⚡ 短期</option><option value="mid_term">📊 中期</option><option value="long_term">🎯 长期</option></select></div>
+                <div class="form-group"><label class="form-label">优先级</label><select class="form-select" id="plan-pri"><option value="low">✨ 低</option><option value="medium">📌 中</option><option value="high">🔥 高</option></select></div>
+                <div class="form-group"><label class="form-label">截止日期</label><input class="form-input" id="plan-date" type="date"></div>
+                <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="savePlan()">保存</button></div>
+            `);
+        }
+        
+        async function showEditPlan(id, type) {
+            const res = await fetch(`${API}/plan/plans/${id}`);
+            const plan = await res.json();
+            currentEditingId = id;
+            showModal('编辑计划', `
+                <div class="form-group"><label class="form-label">计划标题</label><input class="form-input" id="plan-title" value="${plan.title || ''}" placeholder="输入计划标题"></div>
+                <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="plan-desc" placeholder="简单描述一下...">${plan.description || ''}</textarea></div>
+                <div class="form-group"><label class="form-label">类型</label><select class="form-select" id="plan-type">
+                    <option value="short_term" ${type === 'short_term' ? 'selected' : ''}>⚡ 短期</option>
+                    <option value="mid_term" ${type === 'mid_term' ? 'selected' : ''}>📊 中期</option>
+                    <option value="long_term" ${type === 'long_term' ? 'selected' : ''}>🎯 长期</option>
+                </select></div>
+                <div class="form-group"><label class="form-label">优先级</label><select class="form-select" id="plan-pri">
+                    <option value="low" ${plan.priority === 'low' ? 'selected' : ''}>✨ 低</option>
+                    <option value="medium" ${plan.priority === 'medium' ? 'selected' : ''}>📌 中</option>
+                    <option value="high" ${plan.priority === 'high' ? 'selected' : ''}>🔥 高</option>
+                </select></div>
+                <div class="form-group"><label class="form-label">截止日期</label><input class="form-input" id="plan-date" type="date" value="${plan.end_date || ''}"></div>
+                <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="savePlan()">保存</button></div>
+            `);
+        }
+        
+        async function savePlan() {
+            const data = {
+                title: document.getElementById('plan-title').value,
+                description: document.getElementById('plan-desc').value,
+                type: document.getElementById('plan-type').value,
+                priority: document.getElementById('plan-pri').value,
+                end_date: document.getElementById('plan-date').value
+            };
+            if (currentEditingId) {
+                await fetch(`${API}/plan/plans/${currentEditingId}`, {
+                    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('计划已更新！');
+            } else {
+                await fetch(`${API}/plan/plans`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('计划已添加！');
+            }
+            closeModal(); loadPlans();
+        }
+        
+        async function completePlan(id) {
+            await fetch(`${API}/plan/plans/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status: 'completed'}) });
+            loadPlans(); toast('太棒了！已完成！🎉');
+        }
+        
+        async function deletePlan(id) {
+            await fetch(`${API}/plan/plans/${id}`, { method: 'DELETE' });
+            loadPlans(); toast('已删除');
+        }
+        
+        async function syncToPlanFromPlan(id) {
+            toast('这已经是计划了～');
+        }
+        
+        async function loadCourses() {
+            const res = await fetch(`${API}/course/courses`);
+            const courses = await res.json();
+            const el = document.getElementById('course-list');
+            if (!courses.length) {
+                el.innerHTML = '<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-text">还没有课程，点击右下角添加</div></div>';
+                return;
+            }
+            el.innerHTML = courses.map(c => `
+                <div class="item-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${c.name}</div>
+                            ${c.description ? `<div class="card-desc">${c.description}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="card-meta">
+                        ${c.teacher ? `<span class="meta-tag">👨‍🏫 ${c.teacher}</span>` : ''}
+                        ${c.assignments?.length ? `<span class="meta-tag">📝 ${c.assignments.length} 个作业</span>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn edit" onclick="showEditCourse('${c.id}')">✏️ 编辑</button>
+                        <button class="action-btn done" onclick="showAddAssignment('${c.id}')">📝 +作业</button>
+                        <button class="action-btn sync" onclick="syncCourse('${c.id}')">🔗 同步到计划</button>
+                        <button class="action-btn delete" onclick="deleteCourse('${c.id}')">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function showAddCourse() {
+            currentEditingId = null;
+            showModal('添加课程', `
+                <div class="form-group"><label class="form-label">课程名称</label><input class="form-input" id="course-name" placeholder="输入课程名称"></div>
+                <div class="form-group"><label class="form-label">老师</label><input class="form-input" id="course-teacher" placeholder="授课老师"></div>
+                <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="course-desc" placeholder="课程简介..."></textarea></div>
+                <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveCourse()">保存</button></div>
+            `);
+        }
+        
+        async function showEditCourse(id) {
+            const res = await fetch(`${API}/course/courses/${id}`);
+            const course = await res.json();
+            currentEditingId = id;
+            showModal('编辑课程', `
+                <div class="form-group"><label class="form-label">课程名称</label><input class="form-input" id="course-name" value="${course.name || ''}" placeholder="输入课程名称"></div>
+                <div class="form-group"><label class="form-label">老师</label><input class="form-input" id="course-teacher" value="${course.teacher || ''}" placeholder="授课老师"></div>
+                <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="course-desc" placeholder="课程简介...">${course.description || ''}</textarea></div>
+                <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveCourse()">保存</button></div>
+            `);
+        }
+        
+        async function saveCourse() {
+            const data = {
+                name: document.getElementById('course-name').value,
+                teacher: document.getElementById('course-teacher').value,
+                description: document.getElementById('course-desc').value
+            };
+            if (currentEditingId) {
+                await fetch(`${API}/course/courses/${currentEditingId}`, {
+                    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('课程已更新！');
+            } else {
+                await fetch(`${API}/course/courses`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('课程已添加！');
+            }
+            closeModal(); loadCourses();
+        }
+        
+        async function deleteCourse(id) {
+            await fetch(`${API}/course/courses/${id}`, { method: 'DELETE' });
+            loadCourses(); toast('已删除');
+        }
+        
+        async function syncCourse(id) {
+            const res = await fetch(`${API}/course/sync_to_plan`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ course_id: id, sync_type: 'study_plan' })
+            });
+            const r = await res.json();
+            toast(r.success ? '已同步到计划！' : r.error);
+        }
+        
+        function showAddAssignment(cid) {
+            showModal('添加作业', `
+                <div class="form-group"><label class="form-label">作业标题</label><input class="form-input" id="asgn-title" placeholder="作业标题"></div>
+                <div class="form-group"><label class="form-label">截止日期</label><input class="form-input" id="asgn-date" type="date"></div>
+                <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="addAssignment('${cid}')">添加</button></div>
+            `);
+        }
+        
+        async function addAssignment(cid) {
+            await fetch(`${API}/course/courses/${cid}/assignments`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
+                    title: document.getElementById('asgn-title').value,
+                    due_date: document.getElementById('asgn-date').value
+                })
+            });
+            closeModal(); loadCourses(); toast('作业已添加！');
+        }
+        
+        async function loadAlgo() {
+            const type = filter.algo;
+            const res = await fetch(`${API}/algorithm/${type}`);
+            const items = await res.json();
+            const el = document.getElementById('algo-list');
+            if (!items.length) {
+                el.innerHTML = '<div class="empty-state"><div class="empty-icon">💻</div><div class="empty-text">还没有内容，点击右下角添加</div></div>';
+                return;
+            }
+            el.innerHTML = items.map(i => `
+                <div class="item-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${i.name || i.title}</div>
+                            ${(i.description || i.difficulty) ? `<div class="card-desc">${i.description || i.difficulty || ''}</div>` : ''}
+                        </div>
+                    </div>
+                    ${i.code ? `<div style="background:#f5f5f5;padding:12px;border-radius:8px;margin-top:12px;font-family:monospace;font-size:0.85rem;overflow:auto;max-height:120px;">${i.code.substring(0, 200)}${i.code.length > 200 ? '...' : ''}</div>` : ''}
+                    <div class="card-meta">
+                        ${i.language ? `<span class="meta-tag">🐍 ${i.language}</span>` : ''}
+                        ${i.difficulty ? `<span class="meta-tag ${i.difficulty}">${i.difficulty === 'hard' ? '🔴 困难' : i.difficulty === 'medium' ? '🟡 中等' : '🟢 简单'}</span>` : ''}
+                        ${i.url ? `<span class="meta-tag">🔗 有链接</span>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn edit" onclick="showEditAlgo('${type}', '${i.id}')">✏️ 编辑</button>
+                        <button class="action-btn sync" onclick="syncAlgo('${type}', '${i.id}')">🔗 同步</button>
+                        <button class="action-btn delete" onclick="deleteAlgo('${type}', '${i.id}')">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function showAlgo(type) {
+            filter.algo = type;
+            document.querySelectorAll('#page-algorithm .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadAlgo();
+        }
+        
+        function showAddAlgo() {
+            currentEditingId = null;
+            const type = filter.algo;
+            if (type === 'templates') {
+                showModal('添加模板', `
+                    <div class="form-group"><label class="form-label">模板名称</label><input class="form-input" id="tmpl-name" placeholder="算法名称"></div>
+                    <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="tmpl-desc" placeholder="简单描述..."></textarea></div>
+                    <div class="form-group"><label class="form-label">代码</label><textarea class="form-textarea" id="tmpl-code" placeholder="代码..." style="min-height:150px;"></textarea></div>
+                    <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveAlgo()">保存</button></div>
+                `);
+            } else {
+                showModal('添加题目', `
+                    <div class="form-group"><label class="form-label">题目标题</label><input class="form-input" id="prob-title" placeholder="题目标题"></div>
+                    <div class="form-group"><label class="form-label">链接</label><input class="form-input" id="prob-url" placeholder="题目链接"></div>
+                    <div class="form-group"><label class="form-label">难度</label><select class="form-select" id="prob-diff"><option value="easy">🟢 简单</option><option value="medium">🟡 中等</option><option value="hard">🔴 困难</option></select></div>
+                    <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveAlgo()">保存</button></div>
+                `);
+            }
+        }
+        
+        async function showEditAlgo(type, id) {
+            const res = await fetch(`${API}/algorithm/${type}`);
+            const items = await res.json();
+            const item = items.find(i => i.id === id);
+            currentEditingId = id;
+            
+            if (type === 'templates') {
+                showModal('编辑模板', `
+                    <div class="form-group"><label class="form-label">模板名称</label><input class="form-input" id="tmpl-name" value="${item.name || ''}" placeholder="算法名称"></div>
+                    <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="tmpl-desc" placeholder="简单描述...">${item.description || ''}</textarea></div>
+                    <div class="form-group"><label class="form-label">代码</label><textarea class="form-textarea" id="tmpl-code" placeholder="代码..." style="min-height:150px;">${item.code || ''}</textarea></div>
+                    <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveAlgo()">保存</button></div>
+                `);
+            } else {
+                showModal('编辑题目', `
+                    <div class="form-group"><label class="form-label">题目标题</label><input class="form-input" id="prob-title" value="${item.title || ''}" placeholder="题目标题"></div>
+                    <div class="form-group"><label class="form-label">链接</label><input class="form-input" id="prob-url" value="${item.url || ''}" placeholder="题目链接"></div>
+                    <div class="form-group"><label class="form-label">难度</label><select class="form-select" id="prob-diff">
+                        <option value="easy" ${item.difficulty === 'easy' ? 'selected' : ''}>🟢 简单</option>
+                        <option value="medium" ${item.difficulty === 'medium' ? 'selected' : ''}>🟡 中等</option>
+                        <option value="hard" ${item.difficulty === 'hard' ? 'selected' : ''}>🔴 困难</option>
+                    </select></div>
+                    <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveAlgo()">保存</button></div>
+                `);
+            }
+        }
+        
+        async function saveAlgo() {
+            const type = filter.algo;
+            let data, endpoint;
+            if (type === 'templates') {
+                data = {
+                    name: document.getElementById('tmpl-name').value,
+                    description: document.getElementById('tmpl-desc').value,
+                    code: document.getElementById('tmpl-code').value
+                };
+                endpoint = 'templates';
+            } else {
+                data = {
+                    title: document.getElementById('prob-title').value,
+                    url: document.getElementById('prob-url').value,
+                    difficulty: document.getElementById('prob-diff').value
+                };
+                endpoint = 'problems';
+            }
+            if (currentEditingId) {
+                await fetch(`${API}/algorithm/${endpoint}/${currentEditingId}`, {
+                    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('已更新！');
+            } else {
+                await fetch(`${API}/algorithm/${endpoint}`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('已添加！');
+            }
+            closeModal(); loadAlgo();
+        }
+        
+        async function syncAlgo(type, id) {
+            const res = await fetch(`${API}/algorithm/sync_to_plan`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ [type === 'templates' ? 'template_id' : 'problem_id']: id, sync_type: type === 'templates' ? 'learning' : 'practice' })
+            });
+            const r = await res.json();
+            toast(r.success ? '已同步到计划！' : r.error);
+        }
+        
+        async function deleteAlgo(type, id) {
+            const endpoint = type === 'templates' ? 'templates' : 'problems';
+            await fetch(`${API}/algorithm/${endpoint}/${id}`, { method: 'DELETE' });
+            loadAlgo(); toast('已删除');
+        }
+        
+        async function loadProjects() {
+            const url = filter.project === 'all' ? `${API}/project/projects` : `${API}/project/projects?type=${filter.project}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const items = filter.project === 'all' ? [...(data.original || []), ...(data.collected || [])] : data;
+            const el = document.getElementById('project-list');
+            if (!items.length) {
+                el.innerHTML = '<div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">还没有项目，点击右下角添加</div></div>';
+                return;
+            }
+            el.innerHTML = items.map(p => `
+                <div class="item-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${p.name}</div>
+                            ${p.description ? `<div class="card-desc">${p.description}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="card-meta">
+                        <span class="meta-tag">${p.status === 'planning' ? '📋 规划中' : p.status === 'developing' ? '🚀 开发中' : '✅ 已完成'}</span>
+                        ${p.is_collected ? '<span class="meta-tag">⭐ 收藏</span>' : '<span class="meta-tag">🧑‍💻 原创</span>'}
+                        ${p.tech_stack?.length ? `<span class="meta-tag">🔧 ${p.tech_stack.length} 技术</span>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn edit" onclick="showEditProject('${p.id}', '${p.is_collected}')">✏️ 编辑</button>
+                        <button class="action-btn sync" onclick="syncProject('${p.id}')">🔗 同步</button>
+                        <button class="action-btn delete" onclick="deleteProject('${p.id}')">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterProjects(type) {
+            filter.project = type;
+            document.querySelectorAll('#page-project .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadProjects();
+        }
+        
+        function showAddProject() {
+            currentEditingId = null;
+            showModal('添加项目', `
+                <div class="form-group"><label class="form-label">项目名称</label><input class="form-input" id="proj-name" placeholder="项目名称"></div>
+                <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="proj-desc" placeholder="项目描述..."></textarea></div>
+                <div class="form-group"><label class="form-label">状态</label><select class="form-select" id="proj-status"><option value="planning">📋 规划中</option><option value="developing">🚀 开发中</option><option value="completed">✅ 已完成</option></select></div>
+                <div class="form-group"><label class="form-label">类型</label><select class="form-select" id="proj-type"><option value="false">🧑‍💻 原创项目</option><option value="true">⭐ 收藏项目</option></select></div>
+                <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveProject()">保存</button></div>
+            `);
+        }
+        
+        async function showEditProject(id, is_collected) {
+            const res = await fetch(`${API}/project/projects`);
+            const data = await res.json();
+            const items = [...(data.original || []), ...(data.collected || [])];
+            const project = items.find(p => p.id === id);
+            currentEditingId = id;
+            
+            showModal('编辑项目', `
+                <div class="form-group"><label class="form-label">项目名称</label><input class="form-input" id="proj-name" value="${project.name || ''}" placeholder="项目名称"></div>
+                <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="proj-desc" placeholder="项目描述...">${project.description || ''}</textarea></div>
+                <div class="form-group"><label class="form-label">状态</label><select class="form-select" id="proj-status">
+                    <option value="planning" ${project.status === 'planning' ? 'selected' : ''}>📋 规划中</option>
+                    <option value="developing" ${project.status === 'developing' ? 'selected' : ''}>🚀 开发中</option>
+                    <option value="completed" ${project.status === 'completed' ? 'selected' : ''}>✅ 已完成</option>
+                </select></div>
+                <div class="form-group"><label class="form-label">类型</label><select class="form-select" id="proj-type">
+                    <option value="false" ${!project.is_collected ? 'selected' : ''}>🧑‍💻 原创项目</option>
+                    <option value="true" ${project.is_collected ? 'selected' : ''}>⭐ 收藏项目</option>
+                </select></div>
+                <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal()">取消</button><button class="modal-btn save" onclick="saveProject()">保存</button></div>
+            `);
+        }
+        
+        async function saveProject() {
+            const data = {
+                name: document.getElementById('proj-name').value,
+                description: document.getElementById('proj-desc').value,
+                status: document.getElementById('proj-status').value,
+                is_collected: document.getElementById('proj-type').value === 'true'
+            };
+            if (currentEditingId) {
+                await fetch(`${API}/project/projects/${currentEditingId}`, {
+                    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('项目已更新！');
+            } else {
+                await fetch(`${API}/project/projects`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                toast('项目已添加！');
+            }
+            closeModal(); loadProjects();
+        }
+        
+        async function syncProject(id) {
+            const res = await fetch(`${API}/project/sync_to_plan`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ project_id: id, sync_type: 'development' })
+            });
+            const r = await res.json();
+            toast(r.success ? '已同步到计划！' : r.error);
+        }
+        
+        async function deleteProject(id) {
+            await fetch(`${API}/project/projects/${id}`, { method: 'DELETE' });
+            loadProjects(); toast('已删除');
+        }
+        
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API}/update/version`);
+                const data = await res.json();
+                document.getElementById('current-version').textContent = data.current_version;
+                
+                let statusHtml = '';
+                if (data.has_update) {
+                    statusHtml = `<span style="color: #e74c3c; font-weight: 600;">🎉 发现新版本 ${data.latest_version}！</span>`;
+                } else {
+                    statusHtml = `<span style="color: #27ae60; font-weight: 600;">✅ 当前已是最新版本</span>`;
+                }
+                document.getElementById('update-status').innerHTML = statusHtml;
+            } catch (e) {
+                document.getElementById('update-status').innerHTML = `<span style="color: #e74c3c;">无法获取版本信息</span>`;
+            }
+        }
+        
+        async function checkForUpdates() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ 检查中...';
+            document.getElementById('update-status').innerHTML = '<span style="color: #666;">正在检查更新...</span>';
+            
+            try {
+                const res = await fetch(`${API}/update/check`, { method: 'POST' });
+                const data = await res.json();
+                
+                let statusHtml = '';
+                if (data.has_update) {
+                    statusHtml = `<div style="margin-bottom: 12px;">
+                        <span style="color: #e74c3c; font-weight: 600; font-size: 1.1rem;">🎉 发现新版本 ${data.latest_version}！</span>
+                    </div>`;
+                    if (data.update_info?.release_notes) {
+                        statusHtml += `<p style="color: #666; margin-bottom: 12px;">${data.update_info.release_notes}</p>`;
+                    }
+                    statusHtml += `<button class="btn-add" onclick="downloadAndInstallUpdate()" style="width:100%;justify-content:center;">
+                        📥 下载并安装更新
+                    </button>`;
+                } else {
+                    statusHtml = `<span style="color: #27ae60; font-weight: 600;">✅ 当前已是最新版本</span>`;
+                }
+                document.getElementById('update-status').innerHTML = statusHtml;
+            } catch (e) {
+                document.getElementById('update-status').innerHTML = `<span style="color: #e74c3c;">检查更新失败：${e.message}</span>`;
+            }
+            
+            btn.disabled = false;
+            btn.textContent = '🔍 检查更新';
+        }
+        
+        async function downloadAndInstallUpdate() {
+            const section = document.getElementById('update-section');
+            section.innerHTML = '<div style="text-align:center;padding:20px;"><span style="color: #666;">📥 正在下载更新，请稍候...</span></div>';
+            
+            try {
+                const res = await fetch(`${API}/update/download`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    section.innerHTML = '<div style="text-align:center;padding:20px;"><span style="color: #27ae60; font-weight:600;">✅ 下载完成！正在安装...</span></div>';
+                    
+                    await fetch(`${API}/update/install`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ path: data.path })
+                    });
+                    
+                    section.innerHTML = '<div style="text-align:center;padding:20px;"><span style="color: #666;">🔄 应用将自动重启以完成更新...</span></div>';
+                } else {
+                    section.innerHTML = `<div style="text-align:center;padding:20px;"><span style="color: #e74c3c;">下载失败：${data.error}</span></div>`;
+                }
+            } catch (e) {
+                section.innerHTML = `<div style="text-align:center;padding:20px;"><span style="color: #e74c3c;">更新失败：${e.message}</span></div>`;
+            }
+        }
+        
+        window.onload = function() {
+            loadSettings();
+        };
+    </script>
+</body>
+</html>

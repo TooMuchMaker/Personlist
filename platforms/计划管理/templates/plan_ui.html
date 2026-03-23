@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRAEWORK 计划管理系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .app-header h1 {
+            color: #667eea;
+            font-weight: 700;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            height: 100%;
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .top-card {
+            min-height: 520px;
+        }
+        .top-card .card-body {
+            flex: 1;
+        }
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .plan-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-medium { border-left: 4px solid #ffc107; }
+        .priority-low { border-left: 4px solid #28a745; }
+        .nav-tabs .nav-link {
+            border: none;
+            color: #fff;
+            font-weight: 500;
+            background: rgba(255,255,255,0.2);
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #667eea;
+            background: #fff;
+            border-bottom: 3px solid #667eea;
+        }
+        .nav-tabs .nav-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .btn {
+            padding: 10px 20px;
+            font-weight: 500;
+        }
+        .btn-lg {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+        }
+        .btn-action {
+            padding: 8px 15px;
+            margin: 2px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            margin: 0.125rem;
+            background: #e9ecef;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        .creator-badge {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 10px;
+        }
+        .creator-user { background: #e3f2fd; color: #1976d2; }
+        .creator-trae { background: #f3e5f5; color: #7b1fa2; }
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .section-title {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #fff;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.5;
+        }
+        .stage-item {
+            padding: 10px 15px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .stage-item:hover {
+            background: #e9ecef;
+        }
+        .stage-item.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .stage-item .stage-dates {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        .stage-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #667eea;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+        .stage-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+        }
+        .stage-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .stage-list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .stage-list-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+        .stage-list-container::-webkit-scrollbar-thumb:hover {
+            background: #5a6fd6;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header text-center">
+        <h1><i class="bi bi-calendar-check"></i> TRAEWORK 计划管理系统</h1>
+        <p class="text-muted">人机共生 · 智能规划</p>
+    </div>
+
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card top-card">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-flag-fill"></i> 阶段管理
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">添加新阶段</h6>
+                        <div class="row g-2 mb-3">
+                            <div class="col-12">
+                                <input type="text" class="form-control" id="newStageName" placeholder="阶段名称">
+                            </div>
+                            <div class="col-6">
+                                <input type="date" class="form-control" id="newStageStart">
+                            </div>
+                            <div class="col-6">
+                                <input type="date" class="form-control" id="newStageEnd">
+                            </div>
+                        </div>
+                        <button class="btn btn-info w-100" onclick="addStage()">
+                            <i class="bi bi-plus-lg"></i> 添加阶段
+                        </button>
+                        
+                        <hr>
+                        
+                        <h6 class="fw-bold mb-3">选择阶段查看计划</h6>
+                        <div class="stage-list-container">
+                            <div id="stageList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card top-card">
+                    <div class="card-header bg-success text-white">
+                        <i class="bi bi-plus-circle-fill"></i> 添加新计划
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label fw-bold">计划类型</label>
+                                <select class="form-select" id="planType">
+                                    <option value="short_term">短期计划</option>
+                                    <option value="mid_term">中期计划</option>
+                                    <option value="long_term">长期计划</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">计划标题 *</label>
+                                <input type="text" class="form-control" id="planTitle" placeholder="输入标题">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">计划描述</label>
+                                <textarea class="form-control" id="planDesc" rows="2" placeholder="输入描述"></textarea>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label fw-bold">优先级</label>
+                                <select class="form-select" id="planPriority">
+                                    <option value="high">🔴 高</option>
+                                    <option value="medium" selected>🟡 中</option>
+                                    <option value="low">🟢 低</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label fw-bold">开始日期</label>
+                                <input type="date" class="form-control" id="planStart">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label fw-bold">结束日期</label>
+                                <input type="date" class="form-control" id="planEnd">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">标签</label>
+                                <input type="text" class="form-control" id="planTags" placeholder="标签1, 标签2">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">创建者</label>
+                                <select class="form-select" id="planCreator">
+                                    <option value="user">👤 用户</option>
+                                    <option value="trae">🤖 TRAE</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-success btn-lg mt-3 w-100" onclick="addPlan()">
+                            <i class="bi bi-plus-lg"></i> 添加计划
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card top-card">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="bi bi-calendar-event"></i> 近期截止计划
+                    </div>
+                    <div class="card-body">
+                        <div id="upcomingContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="section-title"><i class="bi bi-list-ul"></i> 计划列表</h4>
+
+        <ul class="nav nav-tabs mb-3" id="planTabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="javascript:void(0)" onclick="showTab('stage')">
+                    <i class="bi bi-flag-fill"></i> 阶段计划
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" onclick="showTab('short_term')">
+                    <i class="bi bi-lightning-fill"></i> 短期计划
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" onclick="showTab('mid_term')">
+                    <i class="bi bi-calendar-event-fill"></i> 中期计划
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" onclick="showTab('long_term')">
+                    <i class="bi bi-calendar3"></i> 长期计划
+                </a>
+            </li>
+        </ul>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label text-white fw-bold">排序方式</label>
+                <select class="form-select" id="sortBy" onchange="loadPlans()">
+                    <option value="priority">按优先级排序</option>
+                    <option value="start_date">按开始日期排序</option>
+                    <option value="end_date">按结束日期排序</option>
+                    <option value="created_at">按创建时间排序</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-white fw-bold">状态筛选</label>
+                <select class="form-select" id="filterStatus" onchange="loadPlans()">
+                    <option value="">所有状态</option>
+                    <option value="pending">⏳ 待处理</option>
+                    <option value="in_progress">🔄 进行中</option>
+                    <option value="completed">✅ 已完成</option>
+                    <option value="cancelled">❌ 已取消</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="plansContainer"></div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil-fill"></i> 编辑计划</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editPlanType">
+                    <input type="hidden" id="editPlanId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">标题</label>
+                        <input type="text" class="form-control" id="editTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">描述</label>
+                        <textarea class="form-control" id="editDesc" rows="3"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label fw-bold">优先级</label>
+                            <select class="form-select" id="editPriority">
+                                <option value="high">🔴 高</option>
+                                <option value="medium">🟡 中</option>
+                                <option value="low">🟢 低</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label class="form-label fw-bold">状态</label>
+                            <select class="form-select" id="editStatus">
+                                <option value="pending">⏳ 待处理</option>
+                                <option value="in_progress">🔄 进行中</option>
+                                <option value="completed">✅ 已完成</option>
+                                <option value="cancelled">❌ 已取消</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label fw-bold">开始日期</label>
+                            <input type="date" class="form-control" id="editStart">
+                        </div>
+                        <div class="col">
+                            <label class="form-label fw-bold">结束日期</label>
+                            <input type="date" class="form-control" id="editEnd">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">进度: <span id="progressValue">0%</span></label>
+                        <input type="range" class="form-range" id="editProgress" min="0" max="100" oninput="document.getElementById('progressValue').textContent = this.value + '%'">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-primary btn-lg" onclick="saveEdit()">
+                        <i class="bi bi-check-lg"></i> 保存修改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="reminderPopupModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-clock-history"></i> 昨日截止项目总结</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="reminderPopupContent">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-lg" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg"></i> 我知道了
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentTab = 'stage';
+        let selectedStageId = null;
+        let allPlans = { long_term: [], mid_term: [], short_term: [] };
+        let stages = [];
+
+        function calculateReminders() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const upcoming_plans = [];
+            const upcoming_stages = [];
+            const yesterday_plans = [];
+            const yesterday_stages = [];
+            
+            for (const planType in allPlans) {
+                for (const plan of allPlans[planType]) {
+                    if (plan.end_date && plan.status !== 'completed' && plan.status !== 'cancelled') {
+                        const endDate = new Date(plan.end_date);
+                        endDate.setHours(0, 0, 0, 0);
+                        const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                        
+                        const planCopy = { ...plan, plan_type: planType, days_left: daysLeft };
+                        
+                        if (daysLeft < 0) {
+                            if (daysLeft === -1) {
+                                planCopy.auto_summary = generatePlanSummary(plan);
+                                yesterday_plans.push(planCopy);
+                            }
+                        } else if (daysLeft <= 3) {
+                            upcoming_plans.push(planCopy);
+                        }
+                    }
+                }
+            }
+            
+            for (const stage of stages) {
+                if (stage.end_date) {
+                    const endDate = new Date(stage.end_date);
+                    endDate.setHours(0, 0, 0, 0);
+                    const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    const stageCopy = { ...stage, days_left: daysLeft };
+                    
+                    if (daysLeft < 0) {
+                        if (daysLeft === -1) {
+                            stageCopy.auto_summary = generateStageSummary(stage);
+                            yesterday_stages.push(stageCopy);
+                        }
+                    } else if (daysLeft <= 3) {
+                        upcoming_stages.push(stageCopy);
+                    }
+                }
+            }
+            
+            return {
+                upcoming_plans,
+                upcoming_stages,
+                yesterday_plans,
+                yesterday_stages,
+                today: today.toISOString().split('T')[0]
+            };
+        }
+
+        function generatePlanSummary(plan) {
+            const progress = plan.progress || 0;
+            const status = plan.status || 'pending';
+            const title = plan.title || '该计划';
+            const parts = [];
+            
+            if (progress === 100) parts.push(`「${title}」已完成100%，但状态未更新为已完成。`);
+            else if (progress >= 80) parts.push(`「${title}」进度达到${progress}%，接近完成。`);
+            else if (progress >= 50) parts.push(`「${title}」进度为${progress}%，完成过半。`);
+            else if (progress > 0) parts.push(`「${title}」进度仅为${progress}%，尚未完成。`);
+            else parts.push(`「${title}」尚未开始执行。`);
+            
+            if (status === 'pending') parts.push("当前状态为待处理，建议尽快启动。");
+            else if (status === 'in_progress') parts.push("当前状态为进行中，需要关注进度。");
+            
+            if (plan.priority === 'high') parts.push("该计划优先级较高，建议优先处理。");
+            
+            return parts.join(' ');
+        }
+
+        function generateStageSummary(stage) {
+            const stageName = stage.name || '该阶段';
+            const stageStart = stage.start_date;
+            const stageEnd = stage.end_date;
+            
+            const stagePlans = [];
+            for (const planType in allPlans) {
+                for (const plan of allPlans[planType]) {
+                    if (isPlanInStage(plan, stageStart, stageEnd)) {
+                        stagePlans.push({ ...plan, plan_type: planType });
+                    }
+                }
+            }
+            
+            const total = stagePlans.length;
+            const completed = stagePlans.filter(p => p.status === 'completed').length;
+            const inProgress = stagePlans.filter(p => p.status === 'in_progress').length;
+            const pending = stagePlans.filter(p => p.status === 'pending').length;
+            
+            const parts = [
+                `「${stageName}」已结束。`,
+                `该阶段共有${total}个计划：`,
+                `已完成${completed}个，进行中${inProgress}个，待处理${pending}个。`
+            ];
+            
+            if (total > 0) {
+                const rate = (completed / total) * 100;
+                parts.push(`完成率为${rate.toFixed(1)}%。`);
+                if (rate >= 80) parts.push("阶段目标完成情况良好！");
+                else if (rate >= 50) parts.push("阶段目标完成情况一般，部分计划需要跟进。");
+                else parts.push("阶段目标完成情况不理想，需要分析原因。");
+            }
+            
+            return parts.join(' ');
+        }
+
+        function isPlanInStage(plan, stageStart, stageEnd) {
+            const planStart = plan.start_date || '';
+            const planEnd = plan.end_date || '';
+            if (!planStart && !planEnd) return false;
+            if (planStart && planEnd) return planStart <= stageEnd && planEnd >= stageStart;
+            if (planStart) return planStart <= stageEnd;
+            if (planEnd) return planEnd >= stageStart;
+            return false;
+        }
+
+        async function loadPlans() {
+            const res = await fetch('/api/plans');
+            const data = await res.json();
+            allPlans = data.plans;
+            stages = data.stages || [];
+            saveToCache(data);
+            displayPlans();
+            displayReminders();
+        }
+
+        function saveToCache(data) {
+            try {
+                localStorage.setItem('planCache', JSON.stringify({
+                    data,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {}
+        }
+
+        function loadFromCache() {
+            try {
+                const cached = localStorage.getItem('planCache');
+                if (cached) {
+                    const { data, timestamp } = JSON.parse(cached);
+                    if (Date.now() - timestamp < 60000) {
+                        return data;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function displayReminders() {
+            const data = calculateReminders();
+            displayUpcomingCard(data);
+            checkAndShowPopup(data);
+        }
+
+        function displayUpcomingCard(data) {
+            const { upcoming_plans, upcoming_stages } = data;
+            const container = document.getElementById('upcomingContainer');
+            
+            let html = '';
+            
+            if (upcoming_stages.length === 0 && upcoming_plans.length === 0) {
+                html = '<p class="text-muted text-center">未来三天暂无截止项目</p>';
+            } else {
+                if (upcoming_stages.length > 0) {
+                    html += '<h6 class="fw-bold mb-2">📍 阶段</h6>';
+                    upcoming_stages.sort((a, b) => a.days_left - b.days_left);
+                    upcoming_stages.forEach(stage => {
+                        const badgeClass = stage.days_left === 1 ? 'bg-danger' : stage.days_left === 2 ? 'bg-warning text-dark' : 'bg-info';
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                <span class="small">${stage.name}</span>
+                                <span class="badge ${badgeClass}">${stage.days_left}天后</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                if (upcoming_plans.length > 0) {
+                    html += '<h6 class="fw-bold mb-2 mt-3">📝 计划</h6>';
+                    upcoming_plans.sort((a, b) => a.days_left - b.days_left);
+                    upcoming_plans.forEach(plan => {
+                        const badgeClass = plan.days_left === 1 ? 'bg-danger' : plan.days_left === 2 ? 'bg-warning text-dark' : 'bg-info';
+                        const priorityIcon = plan.priority === 'high' ? '🔴' : plan.priority === 'medium' ? '🟡' : '🟢';
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                <span class="small">${priorityIcon} ${plan.title}</span>
+                                <span class="badge ${badgeClass}">${plan.days_left}天后</span>
+                            </div>
+                        `;
+                    });
+                }
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function checkAndShowPopup(data) {
+            const { yesterday_plans, yesterday_stages, today } = data;
+            const hasYesterday = yesterday_plans.length > 0 || yesterday_stages.length > 0;
+            
+            if (!hasYesterday) return;
+
+            const lastReminderDate = localStorage.getItem('lastReminderDate');
+            if (lastReminderDate === today) {
+                return;
+            }
+
+            localStorage.setItem('lastReminderDate', today);
+            showReminderPopup(data);
+        }
+
+        function showReminderPopup(data) {
+            const { yesterday_plans, yesterday_stages } = data;
+            
+            let popupContent = '<div class="text-center mb-3"><h5 class="text-info"><i class="bi bi-clock-history"></i> 昨日截止项目总结</h5></div>';
+            
+            if (yesterday_stages.length > 0) {
+                popupContent += '<div class="mb-3"><h6 class="text-primary"><i class="bi bi-flag"></i> 阶段</h6>';
+                yesterday_stages.forEach(stage => {
+                    popupContent += `
+                        <div class="alert alert-info py-2 mb-2">
+                            <strong>📍 ${stage.name}</strong>
+                            <div class="mt-2 small">
+                                <i class="bi bi-robot"></i> ${stage.auto_summary || '暂无总结'}
+                            </div>
+                        </div>`;
+                });
+                popupContent += '</div>';
+            }
+            
+            if (yesterday_plans.length > 0) {
+                popupContent += '<div class="mb-3"><h6 class="text-primary"><i class="bi bi-list-check"></i> 计划</h6>';
+                yesterday_plans.forEach(plan => {
+                    popupContent += `
+                        <div class="alert alert-info py-2 mb-2">
+                            <strong>📝 ${plan.title}</strong> (${getPlanTypeName(plan.plan_type)})
+                            <div class="mt-2 small">
+                                <i class="bi bi-robot"></i> ${plan.auto_summary || '暂无总结'}
+                            </div>
+                        </div>`;
+                });
+                popupContent += '</div>';
+            }
+            
+            if (yesterday_stages.length === 0 && yesterday_plans.length === 0) {
+                popupContent = '<div class="text-center text-muted py-4">昨日无截止项目</div>';
+            }
+
+            document.getElementById('reminderPopupContent').innerHTML = popupContent;
+            new bootstrap.Modal(document.getElementById('reminderPopupModal')).show();
+        }
+
+        function getPlanTypeName(type) {
+            return { long_term: '长期', mid_term: '中期', short_term: '短期' }[type] || type;
+        }
+
+        async function loadStages() {
+            const res = await fetch('/api/stages');
+            stages = await res.json();
+            displayStageList();
+        }
+
+        function displayStageList() {
+            const container = document.getElementById('stageList');
+            if (stages.length === 0) {
+                container.innerHTML = '<p class="text-muted small">暂无阶段，请先添加</p>';
+                return;
+            }
+            
+            container.innerHTML = stages.map(stage => `
+                <div class="stage-item ${selectedStageId === stage.id ? 'active' : ''}" onclick="selectStage(${stage.id})">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-flag"></i> ${stage.name}</span>
+                        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteStage(${stage.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <div class="stage-dates">${stage.start_date} ~ ${stage.end_date}</div>
+                </div>
+            `).join('');
+        }
+
+        async function selectStage(stageId) {
+            if (selectedStageId === stageId) return;
+            const savedScroll = window.scrollY;
+            selectedStageId = stageId;
+            isChangingHash = true;
+            location.hash = `stage/${stageId}`;
+            isChangingHash = false;
+            displayStageList();
+            if (currentTab === 'stage') {
+                await displayPlans();
+            }
+            window.scrollTo(0, savedScroll);
+        }
+
+        async function addStage() {
+            const name = document.getElementById('newStageName').value;
+            const start_date = document.getElementById('newStageStart').value;
+            const end_date = document.getElementById('newStageEnd').value;
+            
+            if (!name || !start_date || !end_date) return;
+
+            const res = await fetch('/api/stages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, start_date, end_date })
+            });
+
+            if (res.ok) {
+                document.getElementById('newStageName').value = '';
+                document.getElementById('newStageStart').value = '';
+                document.getElementById('newStageEnd').value = '';
+                loadStages();
+            }
+        }
+
+        async function deleteStage(stageId) {
+            const res = await fetch(`/api/stages/${stageId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                if (selectedStageId === stageId) {
+                    selectedStageId = null;
+                }
+                loadStages();
+                loadPlans();
+            }
+        }
+
+        async function addPlan() {
+            const title = document.getElementById('planTitle').value.trim();
+            if (!title) {
+                alert('请输入计划标题');
+                return;
+            }
+
+            const planType = document.getElementById('planType').value;
+            
+            const duplicate = allPlans[planType].find(p => 
+                p.title.trim().toLowerCase() === title.toLowerCase() && 
+                p.status !== 'completed' && 
+                p.status !== 'cancelled'
+            );
+            
+            if (duplicate) {
+                alert(`已存在同名计划：「${title}」\n请修改标题或先处理已有计划。`);
+                return;
+            }
+
+            const tags = document.getElementById('planTags').value
+                .split(',')
+                .map(t => t.trim())
+                .filter(t => t);
+            
+            const plan = {
+                plan_type: planType,
+                title: title,
+                description: document.getElementById('planDesc').value,
+                priority: document.getElementById('planPriority').value,
+                start_date: document.getElementById('planStart').value,
+                end_date: document.getElementById('planEnd').value,
+                tags: tags,
+                creator: document.getElementById('planCreator').value
+            };
+
+            const res = await fetch('/api/plans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(plan)
+            });
+            
+            if (res.ok) {
+                document.getElementById('planTitle').value = '';
+                document.getElementById('planDesc').value = '';
+                document.getElementById('planTags').value = '';
+                loadPlans();
+            } else {
+                const err = await res.json();
+                alert(err.error || '添加失败');
+            }
+        }
+
+        let isChangingHash = false;
+
+        function showTab(tab) {
+            if (currentTab === tab) return;
+            const savedScroll = window.scrollY;
+            currentTab = tab;
+            isChangingHash = true;
+            location.hash = tab;
+            isChangingHash = false;
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            displayPlans();
+            window.scrollTo(0, savedScroll);
+            if (event) event.preventDefault();
+            return false;
+        }
+
+        async function displayPlans() {
+            const container = document.getElementById('plansContainer');
+            const sortBy = document.getElementById('sortBy').value;
+            const filterStatus = document.getElementById('filterStatus').value;
+            
+            let plans = [];
+            
+            if (currentTab === 'stage') {
+                if (!selectedStageId) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-flag"></i>
+                            <h4 class="mt-3">请先选择一个阶段</h4>
+                            <p>在左侧"阶段管理"中选择要查看的阶段</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const res = await fetch(`/api/stages/${selectedStageId}/plans?sort=${sortBy}`);
+                plans = await res.json();
+            } else {
+                const res = await fetch(`/api/plans/${currentTab}?sort=${sortBy}`);
+                plans = await res.json();
+            }
+
+            if (filterStatus) {
+                plans = plans.filter(p => p.status === filterStatus);
+            }
+
+            if (plans.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4 class="mt-3">暂无计划</h4>
+                        <p>点击上方"添加新计划"创建您的第一个计划</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = plans.map(plan => createPlanCard(plan)).join('');
+        }
+
+        function createPlanCard(plan) {
+            const priorityClass = `priority-${plan.priority}`;
+            const priorityText = { high: '🔴 高', medium: '🟡 中', low: '🟢 低' }[plan.priority];
+            const statusText = { pending: '⏳ 待处理', in_progress: '🔄 进行中', completed: '✅ 已完成', cancelled: '❌ 已取消' }[plan.status];
+            const statusBadgeClass = {
+                pending: 'bg-secondary',
+                in_progress: 'bg-primary',
+                completed: 'bg-success',
+                cancelled: 'bg-danger'
+            }[plan.status];
+            const creatorClass = `creator-${plan.creator}`;
+            const typeText = { long_term: '长期', mid_term: '中期', short_term: '短期' }[plan.plan_type || currentTab];
+
+            let stageBadges = '';
+            if (plan.start_date && plan.end_date) {
+                const matchingStages = stages.filter(stage => {
+                    return plan.start_date <= stage.end_date && plan.end_date >= stage.start_date;
+                });
+                if (matchingStages.length > 0) {
+                    stageBadges = matchingStages.map(s => `<span class="stage-badge">${s.name}</span>`).join('');
+                }
+            }
+
+            return `
+                <div class="card plan-card ${priorityClass}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                ${plan.title}
+                                <span class="badge bg-secondary">${typeText}</span>
+                                ${stageBadges}
+                            </h5>
+                            <div>
+                                <span class="badge ${plan.priority === 'high' ? 'bg-danger' : plan.priority === 'medium' ? 'bg-warning text-dark' : 'bg-success'}">${priorityText}</span>
+                                <span class="badge ${statusBadgeClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        ${plan.description ? `<p class="card-text text-muted">${plan.description}</p>` : ''}
+                        <div class="row small text-muted mb-2">
+                            ${plan.start_date ? `<div class="col"><i class="bi bi-calendar-event"></i> 开始: ${plan.start_date}</div>` : ''}
+                            ${plan.end_date ? `<div class="col"><i class="bi bi-calendar-check"></i> 结束: ${plan.end_date}</div>` : ''}
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>进度</span>
+                                <span>${plan.progress}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: ${plan.progress}%">${plan.progress}%</div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            ${plan.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="creator-badge ${creatorClass}">${plan.creator === 'user' ? '👤 用户' : '🤖 TRAE'}</span>
+                            <div class="action-buttons">
+                                <button class="btn btn-warning btn-action" onclick="editPlan('${plan.plan_type || currentTab}', ${plan.id})">
+                                    <i class="bi bi-pencil-fill"></i> 编辑
+                                </button>
+                                <button class="btn btn-danger btn-action" onclick="deletePlan('${plan.plan_type || currentTab}', ${plan.id})">
+                                    <i class="bi bi-trash-fill"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function editPlan(planType, planId) {
+            const plan = allPlans[planType].find(p => p.id === planId);
+            if (!plan) return;
+
+            document.getElementById('editPlanType').value = planType;
+            document.getElementById('editPlanId').value = planId;
+            document.getElementById('editTitle').value = plan.title;
+            document.getElementById('editDesc').value = plan.description;
+            document.getElementById('editPriority').value = plan.priority;
+            document.getElementById('editStatus').value = plan.status;
+            document.getElementById('editStart').value = plan.start_date;
+            document.getElementById('editEnd').value = plan.end_date;
+            document.getElementById('editProgress').value = plan.progress;
+            document.getElementById('progressValue').textContent = plan.progress + '%';
+
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        async function saveEdit() {
+            const planType = document.getElementById('editPlanType').value;
+            const planId = document.getElementById('editPlanId').value;
+            
+            const updates = {
+                title: document.getElementById('editTitle').value,
+                description: document.getElementById('editDesc').value,
+                priority: document.getElementById('editPriority').value,
+                status: document.getElementById('editStatus').value,
+                start_date: document.getElementById('editStart').value,
+                end_date: document.getElementById('editEnd').value,
+                progress: parseInt(document.getElementById('editProgress').value)
+            };
+
+            const res = await fetch(`/api/plans/${planType}/${planId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                loadPlans();
+            }
+        }
+
+        async function deletePlan(planType, planId) {
+            const res = await fetch(`/api/plans/${planType}/${planId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                loadPlans();
+            }
+        }
+
+        let isInitialized = false;
+
+        async function initPage() {
+            if (isInitialized) return;
+            isInitialized = true;
+            
+            const hash = location.hash.slice(1);
+            const savedScroll = sessionStorage.getItem('planScrollPosition');
+            
+            if (hash) {
+                if (hash === 'short_term' || hash === 'mid_term' || hash === 'long_term') {
+                    currentTab = hash;
+                } else if (hash.startsWith('stage/')) {
+                    const stageId = parseInt(hash.split('/')[1]);
+                    if (!isNaN(stageId)) {
+                        currentTab = 'stage';
+                        selectedStageId = stageId;
+                    }
+                }
+            }
+            
+            updateTabUI();
+            
+            const cached = loadFromCache();
+            if (cached) {
+                allPlans = cached.plans;
+                stages = cached.stages || [];
+                displayStageList();
+                displayPlans();
+                displayReminders();
+                if (savedScroll) {
+                    requestAnimationFrame(() => window.scrollTo(0, parseInt(savedScroll)));
+                }
+            }
+            
+            const res = await fetch('/api/plans');
+            const data = await res.json();
+            allPlans = data.plans;
+            stages = data.stages || [];
+            saveToCache(data);
+            
+            displayStageList();
+            displayPlans();
+            displayReminders();
+            
+            if (savedScroll && !cached) {
+                requestAnimationFrame(() => window.scrollTo(0, parseInt(savedScroll)));
+            }
+        }
+
+        function updateTabUI() {
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            if (currentTab === 'stage') {
+                document.querySelector('.nav-link[onclick="showTab(\'stage\')"]')?.classList.add('active');
+            } else {
+                document.querySelector(`.nav-link[onclick="showTab('${currentTab}')"]`)?.classList.add('active');
+            }
+        }
+
+        function saveScrollPosition() {
+            sessionStorage.setItem('planScrollPosition', window.scrollY.toString());
+        }
+
+        window.addEventListener('scroll', saveScrollPosition);
+
+        window.addEventListener('hashchange', () => {
+            if (isChangingHash) return;
+            const hash = location.hash.slice(1);
+            const savedScroll = window.scrollY;
+            if (hash === 'short_term' || hash === 'mid_term' || hash === 'long_term') {
+                if (currentTab !== hash) {
+                    currentTab = hash;
+                    updateTabUI();
+                    displayPlans();
+                }
+            } else if (hash.startsWith('stage/')) {
+                const stageId = parseInt(hash.split('/')[1]);
+                if (!isNaN(stageId) && selectedStageId !== stageId) {
+                    selectedStageId = stageId;
+                    displayStageList();
+                    if (currentTab === 'stage') displayPlans();
+                }
+            }
+            window.scrollTo(0, savedScroll);
+        });
+
+        initPage();
+    </script>
+</body>
+</html>

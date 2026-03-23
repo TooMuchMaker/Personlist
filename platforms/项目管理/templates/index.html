@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .sidebar {
+            background: #fff;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar-header h4 {
+            color: #fff;
+            font-weight: 700;
+        }
+        .nav-item-custom {
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-item-custom:hover {
+            background: #f5f5f5;
+        }
+        .nav-item-custom.active {
+            background: #e8f0fe;
+            border-left-color: #667eea;
+            color: #667eea;
+            font-weight: 500;
+        }
+        .nav-item-custom i {
+            font-size: 1.2rem;
+        }
+        .category-item {
+            padding: 10px 20px 10px 45px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .category-item:hover, .category-item.active {
+            background: #f5f5f5;
+            color: #333;
+        }
+        .category-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .main-content {
+            margin-left: 260px;
+            padding: 20px 30px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 20px;
+            font-weight: 600;
+            border-radius: 12px 12px 0 0;
+        }
+        .project-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .project-card:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.15);
+            transform: translateY(-2px);
+        }
+        .project-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .project-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .project-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: #fff;
+        }
+        .tech-tag {
+            background: #e8f4f8;
+            color: #17a2b8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .status-developing { background: #fd7e14; }
+        .status-completed { background: #28a745; }
+        .status-archived { background: #6c757d; }
+        .status-active { background: #17a2b8; }
+        .search-box {
+            background: #fff;
+            border: 1px solid #d0d0d0;
+            border-radius: 25px;
+            padding: 10px 20px;
+            color: #333;
+            width: 300px;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+            color: #fff;
+        }
+        .form-control, .form-select {
+            background: #fff;
+            border: 1px solid #d0d0d0;
+            color: #333;
+        }
+        .form-control:focus, .form-select:focus {
+            background: #fff;
+            border-color: #667eea;
+            color: #333;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        .modal-content {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .modal-header {
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+        .modal-footer {
+            border-top: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #aaa;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+        .tab-content-custom {
+            display: none;
+        }
+        .tab-content-custom.active {
+            display: block;
+        }
+        .upload-zone {
+            border: 2px dashed #d0d0d0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .upload-zone i {
+            font-size: 2rem;
+            color: #667eea;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .file-item:hover {
+            background: #e9ecef;
+        }
+        .file-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            background: #667eea;
+            color: white;
+        }
+        .file-info {
+            flex: 1;
+        }
+        .file-name {
+            font-weight: 500;
+            color: #333;
+        }
+        .file-meta {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .file-actions .btn {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        .original-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .collected-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        .project-detail-page {
+            display: none;
+        }
+        .project-detail-page.active {
+            display: block;
+        }
+        .project-list-page {
+            display: block;
+        }
+        .project-list-page.hidden {
+            display: none;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        .back-btn:hover {
+            color: #5a6fd6;
+        }
+        .detail-header {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        .detail-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .detail-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .detail-info-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 80px;
+        }
+        .detail-info-value {
+            color: #333;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title i {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="bi bi-folder-fill"></i> 项目管理平台</h4>
+        </div>
+        <div class="nav-item-custom active" onclick="switchTab('original')">
+            <i class="bi bi-lightbulb-fill" style="color: #667eea;"></i>
+            <span>原创项目</span>
+        </div>
+        <div id="originalCategories"></div>
+        <div class="nav-item-custom" onclick="switchTab('collected')">
+            <i class="bi bi-star-fill" style="color: #28a745;"></i>
+            <span>收藏项目</span>
+        </div>
+        <div id="collectedCategories"></div>
+    </div>
+
+    <div class="main-content">
+        <div id="projectListPage" class="project-list-page">
+            <div id="originalTab" class="tab-content-custom active">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="bi bi-lightbulb"></i> 原创项目</h1>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="search-box" placeholder="搜索项目..." id="originalSearch" oninput="filterProjects('original')">
+                        <button class="btn btn-primary-custom" onclick="showAddProjectModal('original')">
+                            <i class="bi bi-plus-lg"></i> 添加项目
+                        </button>
+                    </div>
+                </div>
+                <div class="row" id="originalProjectList"></div>
+            </div>
+
+            <div id="collectedTab" class="tab-content-custom">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="bi bi-star"></i> 收藏项目</h1>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="search-box" placeholder="搜索项目..." id="collectedSearch" oninput="filterProjects('collected')">
+                        <button class="btn btn-primary-custom" onclick="showAddProjectModal('collected')">
+                            <i class="bi bi-plus-lg"></i> 添加项目
+                        </button>
+                    </div>
+                </div>
+                <div class="row" id="collectedProjectList"></div>
+            </div>
+        </div>
+
+        <div id="projectDetailPage" class="project-detail-page">
+            <div class="back-btn" onclick="backToList()">
+                <i class="bi bi-arrow-left"></i> 返回项目列表
+            </div>
+            <div class="detail-header" id="detailHeader"></div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="section-title"><i class="bi bi-file-earmark"></i> 项目文件</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <p class="mb-0 mt-2">点击或拖拽文件/文件夹上传</p>
+                            </div>
+                            <input type="file" id="fileInput" style="display:none" onchange="uploadFiles(event)" multiple>
+                            <input type="file" id="folderInput" style="display:none" onchange="uploadFolder(event)" webkitdirectory directory multiple>
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('fileInput').click()">
+                                    <i class="bi bi-file-earmark-plus"></i> 上传文件
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('folderInput').click()">
+                                    <i class="bi bi-folder-plus"></i> 上传文件夹
+                                </button>
+                            </div>
+                            <div id="fileList" style="max-height: 400px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="section-title"><i class="bi bi-info-circle"></i> 项目信息</span>
+                        </div>
+                        <div class="card-body" id="detailInfo"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="section-title mb-0"><i class="bi bi-calendar-check"></i> 项目计划</span>
+                            <button class="btn btn-sm btn-primary-custom" onclick="showPlanModal()">
+                                <i class="bi bi-plus-lg"></i> 添加计划
+                            </button>
+                        </div>
+                        <div class="card-body" id="planSection">
+                            <div class="text-muted text-center py-3">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="projectModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" id="projectModalHeader">
+                    <h5 class="modal-title" id="projectModalTitle">添加项目</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="projectId">
+                    <input type="hidden" id="projectType">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label fw-bold">项目名称 *</label>
+                            <input type="text" class="form-control" id="projectName">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">分类</label>
+                            <select class="form-select" id="projectCategory"></select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">项目描述</label>
+                        <textarea class="form-control" id="projectDescription" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">技术栈（逗号分隔）</label>
+                            <input type="text" class="form-control" id="projectTechStack" placeholder="如: Python, Flask, Vue">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">状态</label>
+                            <select class="form-select" id="projectStatus">
+                                <option value="developing">开发中</option>
+                                <option value="completed">已完成</option>
+                                <option value="archived">已归档</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">来源链接</label>
+                            <input type="text" class="form-control" id="projectSourceUrl" placeholder="GitHub/Gitee 地址">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">本地路径</label>
+                            <input type="text" class="form-control" id="projectLocalPath" placeholder="本地项目路径">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="saveProject()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加分类</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="categoryType">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">分类名称</label>
+                        <input type="text" class="form-control" id="categoryName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">颜色</label>
+                        <input type="color" class="form-control form-control-color" id="categoryColor" value="#667eea">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="saveCategory()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="planModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title" id="planModalTitle">添加计划</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">计划标题 *</label>
+                        <input type="text" class="form-control" id="planTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">计划类型</label>
+                        <select class="form-select" id="planType">
+                            <option value="short_term">短期计划</option>
+                            <option value="mid_term">中期计划</option>
+                            <option value="long_term">长期计划</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">开始日期</label>
+                            <input type="date" class="form-control" id="planStartDate">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">结束日期</label>
+                            <input type="date" class="form-control" id="planEndDate">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">优先级</label>
+                            <select class="form-select" id="planPriority">
+                                <option value="high">高</option>
+                                <option value="medium" selected>中</option>
+                                <option value="low">低</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">状态</label>
+                            <select class="form-select" id="planStatus">
+                                <option value="pending">待处理</option>
+                                <option value="in_progress">进行中</option>
+                                <option value="completed">已完成</option>
+                                <option value="cancelled">已取消</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">进度 (%)</label>
+                        <input type="range" class="form-range" id="planProgress" min="0" max="100" value="0" oninput="document.getElementById('progressValue').textContent = this.value + '%'">
+                        <span id="progressValue" class="text-muted">0%</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">描述</label>
+                        <textarea class="form-control" id="planDescription" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="savePlan()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let data = {
+            original_projects: [],
+            collected_projects: [],
+            original_categories: [],
+            collected_categories: []
+        };
+        let currentTab = 'original';
+        let currentCategoryFilter = null;
+        let currentProjectId = null;
+        let currentProjectType = null;
+
+        async function loadData() {
+            const res = await fetch('/api/data');
+            data = await res.json();
+            renderProjects();
+            renderCategories();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            currentCategoryFilter = null;
+            document.querySelectorAll('.nav-item-custom').forEach(el => el.classList.remove('active'));
+            event.target.closest('.nav-item-custom')?.classList.add('active');
+            document.querySelectorAll('.tab-content-custom').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+            renderProjects();
+            renderCategories();
+        }
+
+        function renderProjects() {
+            const type = currentTab;
+            const projects = type === 'original' ? data.original_projects : data.collected_projects;
+            const categories = type === 'original' ? data.original_categories : data.collected_categories;
+            const container = document.getElementById(type + 'ProjectList');
+            
+            let filtered = projects;
+            if (currentCategoryFilter) {
+                filtered = filtered.filter(p => p.category === currentCategoryFilter);
+            }
+            
+            const search = document.getElementById(type + 'Search').value.toLowerCase();
+            if (search) {
+                filtered = filtered.filter(p => 
+                    p.name.toLowerCase().includes(search) ||
+                    p.description?.toLowerCase().includes(search) ||
+                    p.tech_stack?.some(t => t.toLowerCase().includes(search))
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-folder2-open"></i>
+                        <p>暂无项目</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(p => {
+                const category = categories.find(c => c.name === p.category);
+                const statusText = {
+                    'developing': '开发中',
+                    'completed': '已完成',
+                    'archived': '已归档',
+                    'active': '关注中'
+                }[p.status] || p.status;
+                
+                return `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="project-card" onclick="showProjectDetail(${p.id}, '${type}')">
+                            <div class="project-name">
+                                ${p.name}
+                                ${p.category ? `<span class="tag" style="background:${category?.color || '#667eea'}">${p.category}</span>` : ''}
+                            </div>
+                            <div class="project-desc">${p.description || '暂无描述'}</div>
+                            <div class="project-meta">
+                                <span class="tag status-${p.status}">${statusText}</span>
+                                ${p.tech_stack?.slice(0, 3).map(t => `<span class="tech-tag">${t}</span>`).join('') || ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCategories() {
+            const type = currentTab;
+            const categories = type === 'original' ? data.original_categories : data.collected_categories;
+            const container = document.getElementById(type + 'Categories');
+            
+            container.innerHTML = categories.map(c => `
+                <div class="category-item ${currentCategoryFilter === c.name ? 'active' : ''}" onclick="filterByCategory('${c.name}')">
+                    <span><span class="category-badge" style="background:${c.color}"></span>${c.name}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteCategory(${c.id}, '${type}')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            `).join('') + `
+                <div class="category-item" onclick="showAddCategoryModal('${type}')" style="color: #667eea;">
+                    <span><i class="bi bi-plus-circle me-2"></i>添加分类</span>
+                </div>
+            `;
+        }
+
+        function filterByCategory(category) {
+            currentCategoryFilter = currentCategoryFilter === category ? null : category;
+            renderProjects();
+            renderCategories();
+        }
+
+        function filterProjects(type) {
+            if (type === currentTab) {
+                renderProjects();
+            }
+        }
+
+        function showProjectDetail(id, type) {
+            currentProjectId = id;
+            currentProjectType = type;
+            
+            const projects = type === 'original' ? data.original_projects : data.collected_projects;
+            const categories = type === 'original' ? data.original_categories : data.collected_categories;
+            const project = projects.find(p => p.id === id);
+            if (!project) return;
+
+            const category = categories.find(c => c.name === project.category);
+            const statusText = {
+                'developing': '开发中',
+                'completed': '已完成',
+                'archived': '已归档',
+                'active': '关注中'
+            }[project.status] || project.status;
+
+            const headerClass = type === 'original' ? 'original-header' : 'collected-header';
+
+            document.getElementById('detailHeader').innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="detail-title">${project.name}</div>
+                        <div class="detail-tags">
+                            ${project.category ? `<span class="tag" style="background:${category?.color || '#667eea'}">${project.category}</span>` : ''}
+                            <span class="tag status-${project.status}">${statusText}</span>
+                            ${project.tech_stack?.map(t => `<span class="tech-tag">${t}</span>`).join('') || ''}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="editProject(${id}, '${type}')">
+                            <i class="bi bi-pencil"></i> 编辑
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteProject(${id}, '${type}')">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailInfo').innerHTML = `
+                <div class="detail-info-grid">
+                    <div class="detail-info-item">
+                        <div class="detail-info-label">描述</div>
+                        <div class="detail-info-value">${project.description || '暂无描述'}</div>
+                    </div>
+                    <div class="detail-info-item">
+                        <div class="detail-info-label">来源链接</div>
+                        <div class="detail-info-value">
+                            ${project.source_url ? `<a href="${project.source_url}" target="_blank">${project.source_url}</a>` : '未设置'}
+                        </div>
+                    </div>
+                    <div class="detail-info-item">
+                        <div class="detail-info-label">本地路径</div>
+                        <div class="detail-info-value">
+                            ${project.local_path || '未设置'}
+                            ${project.local_path ? `<button class="btn btn-sm btn-outline-info ms-2" onclick="openFolder('${project.local_path.replace(/\\/g, '\\\\')}')"><i class="bi bi-folder2-open"></i></button>` : ''}
+                        </div>
+                    </div>
+                    <div class="detail-info-item">
+                        <div class="detail-info-label">创建时间</div>
+                        <div class="detail-info-value">${project.created_at}</div>
+                    </div>
+                    <div class="detail-info-item">
+                        <div class="detail-info-label">更新时间</div>
+                        <div class="detail-info-value">${project.updated_at}</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('projectListPage').classList.add('hidden');
+            document.getElementById('projectDetailPage').classList.add('active');
+            
+            location.hash = `${type}/${id}`;
+            
+            loadProjectFiles(id, type);
+            loadProjectPlan(id);
+            setupUploadZone();
+        }
+
+        function backToList() {
+            document.getElementById('projectListPage').classList.remove('hidden');
+            document.getElementById('projectDetailPage').classList.remove('active');
+            location.hash = '';
+        }
+
+        function setupUploadZone() {
+            const uploadZone = document.getElementById('uploadZone');
+            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+            uploadZone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                await handleDrop(e.dataTransfer.items);
+            });
+        }
+
+        async function loadProjectFiles(projectId, type) {
+            const res = await fetch(`/api/${type}/${projectId}/files`);
+            const data = await res.json();
+            renderFileList(data.files || [], data.folders || [], type, projectId);
+        }
+
+        function renderFileList(files, folders, type, projectId) {
+            const container = document.getElementById('fileList');
+            if (!files.length && !folders.length) {
+                container.innerHTML = '<div class="text-muted text-center py-3">暂无文件</div>';
+                return;
+            }
+            
+            const tree = {};
+            
+            folders.forEach(folderPath => {
+                const parts = folderPath.split('/');
+                let current = tree;
+                for (const part of parts) {
+                    if (!current[part]) current[part] = { __isFolder: true };
+                    current = current[part];
+                }
+            });
+            
+            files.forEach(f => {
+                const parts = f.path.split('/');
+                let current = tree;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!current[parts[i]]) current[parts[i]] = { __isFolder: true };
+                    current = current[parts[i]];
+                }
+                current[parts[parts.length - 1]] = f;
+            });
+            
+            function renderNode(node, path = '') {
+                let html = '';
+                const entries = Object.entries(node).filter(([name]) => name !== '__isFolder').sort((a, b) => {
+                    const aIsFolder = a[1].__isFolder === true;
+                    const bIsFolder = b[1].__isFolder === true;
+                    if (aIsFolder && !bIsFolder) return -1;
+                    if (!aIsFolder && bIsFolder) return 1;
+                    return a[0].localeCompare(b[0]);
+                });
+                
+                for (const [name, value] of entries) {
+                    const fullPath = path ? `${path}/${name}` : name;
+                    if (value.__isFolder === true) {
+                        html += `
+                            <div class="folder-item mb-2">
+                                <div class="d-flex align-items-center p-2 bg-light rounded">
+                                    <i class="bi bi-folder-fill text-warning me-2"></i>
+                                    <span class="fw-medium flex-grow-1">${name}</span>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteProjectFolder('${type}', ${projectId}, '${fullPath}')" title="删除文件夹">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="ms-3 mt-1">${renderNode(value, fullPath)}</div>
+                            </div>
+                        `;
+                    } else {
+                        const f = value;
+                        const ext = name.split('.').pop().toLowerCase();
+                        const icon = {
+                            'pdf': 'bi-file-pdf', 'doc': 'bi-file-word', 'docx': 'bi-file-word',
+                            'xls': 'bi-file-excel', 'xlsx': 'bi-file-excel', 'ppt': 'bi-file-ppt', 'pptx': 'bi-file-ppt',
+                            'zip': 'bi-file-zip', 'rar': 'bi-file-zip', '7z': 'bi-file-zip',
+                            'jpg': 'bi-file-image', 'jpeg': 'bi-file-image', 'png': 'bi-file-image', 'gif': 'bi-file-image',
+                            'mp4': 'bi-file-play', 'mp3': 'bi-file-music',
+                            'js': 'bi-file-code', 'py': 'bi-file-code', 'java': 'bi-file-code', 'go': 'bi-file-code',
+                            'html': 'bi-file-code', 'css': 'bi-file-code', 'json': 'bi-file-code'
+                        }[ext] || 'bi-file-earmark';
+                        
+                        html += `
+                            <div class="file-item">
+                                <div class="file-icon"><i class="bi ${icon}"></i></div>
+                                <div class="file-info">
+                                    <div class="file-name">${name}</div>
+                                    <div class="file-meta">${formatFileSize(f.size)} · ${f.modified}</div>
+                                </div>
+                                <div class="file-actions">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="openProjectFile('${type}', ${projectId}, '${f.path}')" title="打开">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" onclick="downloadProjectFile('${type}', ${projectId}, '${f.path}')" title="下载">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteProjectFile('${type}', ${projectId}, '${f.path}')" title="删除">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                return html;
+            }
+            
+            container.innerHTML = renderNode(tree);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        async function uploadFiles(event) {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                const formData = new FormData();
+                files.forEach((file, index) => {
+                    formData.append('file', file);
+                    formData.append(`relative_path_${index}`, file.name);
+                });
+                await doUpload(formData);
+            }
+            event.target.value = '';
+        }
+
+        async function uploadFolder(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+            
+            const formData = new FormData();
+            const fileInfos = [];
+            const folderSet = new Set();
+            const emptyFolders = [];
+            
+            for (const file of files) {
+                const relativePath = file.webkitRelativePath;
+                const parts = relativePath.split('/');
+                
+                for (let i = 1; i < parts.length - 1; i++) {
+                    const folderPath = parts.slice(1, i + 1).join('/');
+                    folderSet.add(folderPath);
+                }
+                
+                fileInfos.push({ file, relativePath: parts.slice(1).join('/') });
+            }
+            
+            for (const folderPath of folderSet) {
+                const hasContent = fileInfos.some(f => f.relativePath.startsWith(folderPath + '/')) ||
+                                   Array.from(folderSet).some(f => f.startsWith(folderPath + '/'));
+                if (!hasContent) {
+                    emptyFolders.push(folderPath);
+                }
+            }
+            
+            fileInfos.forEach((info, index) => {
+                formData.append('file', info.file);
+                formData.append(`relative_path_${index}`, info.relativePath);
+            });
+            emptyFolders.forEach((folder, index) => formData.append(`empty_folder_${index}`, folder));
+            
+            await doUpload(formData);
+            event.target.value = '';
+        }
+
+        async function handleDrop(items) {
+            const formData = new FormData();
+            const fileInfos = [];
+            const emptyFolders = [];
+            
+            function readAllEntries(reader) {
+                return new Promise(resolve => {
+                    const allEntries = [];
+                    function readBatch() {
+                        reader.readEntries(entries => {
+                            if (entries.length === 0) resolve(allEntries);
+                            else { allEntries.push(...entries); readBatch(); }
+                        });
+                    }
+                    readBatch();
+                });
+            }
+            
+            async function traverseEntry(entry, path = '') {
+                if (entry.isFile) {
+                    const file = await new Promise(resolve => entry.file(resolve));
+                    fileInfos.push({ file, relativePath: path + file.name });
+                } else if (entry.isDirectory) {
+                    const reader = entry.createReader();
+                    const entries = await readAllEntries(reader);
+                    if (entries.length === 0) emptyFolders.push(path + entry.name);
+                    else for (const childEntry of entries) await traverseEntry(childEntry, path + entry.name + '/');
+                }
+            }
+            
+            for (const item of items) {
+                if (item.kind === 'file') {
+                    const entry = item.webkitGetAsEntry();
+                    if (entry) await traverseEntry(entry);
+                }
+            }
+            
+            fileInfos.forEach((info, index) => {
+                formData.append('file', info.file);
+                formData.append(`relative_path_${index}`, info.relativePath);
+            });
+            emptyFolders.forEach((folder, index) => formData.append(`empty_folder_${index}`, folder));
+            
+            if (fileInfos.length > 0 || emptyFolders.length > 0) await doUpload(formData);
+        }
+
+        async function doUpload(formData) {
+            const res = await fetch(`/api/${currentProjectType}/${currentProjectId}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) loadProjectFiles(currentProjectId, currentProjectType);
+            else { const data = await res.json(); alert('上传失败: ' + (data.error || '未知错误')); }
+        }
+
+        async function openProjectFile(type, projectId, filepath) {
+            const res = await fetch(`/api/${type}/${projectId}/open-file/${encodeURIComponent(filepath)}`, { method: 'POST' });
+            if (!res.ok) { const data = await res.json(); alert('打开失败: ' + (data.error || '未知错误')); }
+        }
+
+        function downloadProjectFile(type, projectId, filepath) {
+            window.open(`/api/${type}/${projectId}/files/${encodeURIComponent(filepath)}`, '_blank');
+        }
+
+        async function deleteProjectFile(type, projectId, filepath) {
+            const res = await fetch(`/api/${type}/${projectId}/files/${encodeURIComponent(filepath)}`, { method: 'DELETE' });
+            if (res.ok) loadProjectFiles(projectId, type);
+        }
+
+        async function deleteProjectFolder(type, projectId, folderPath) {
+            const res = await fetch(`/api/${type}/${projectId}/folder/${encodeURIComponent(folderPath)}`, { method: 'DELETE' });
+            if (res.ok) loadProjectFiles(projectId, type);
+        }
+
+        async function openFolder(path) {
+            await fetch('/api/open-folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path })
+            });
+        }
+
+        function showAddProjectModal(type) {
+            const categories = type === 'original' ? data.original_categories : data.collected_categories;
+            
+            document.getElementById('projectModalTitle').textContent = '添加项目';
+            document.getElementById('projectModalHeader').className = 'modal-header ' + (type === 'original' ? 'original-header text-white' : 'collected-header text-white');
+            document.getElementById('projectId').value = '';
+            document.getElementById('projectType').value = type;
+            document.getElementById('projectName').value = '';
+            document.getElementById('projectDescription').value = '';
+            document.getElementById('projectCategory').innerHTML = '<option value="">无分类</option>' + 
+                categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            document.getElementById('projectTechStack').value = '';
+            document.getElementById('projectStatus').value = type === 'original' ? 'developing' : 'active';
+            document.getElementById('projectSourceUrl').value = '';
+            document.getElementById('projectLocalPath').value = '';
+            
+            new bootstrap.Modal(document.getElementById('projectModal')).show();
+        }
+
+        function editProject(id, type) {
+            const projects = type === 'original' ? data.original_projects : data.collected_projects;
+            const categories = type === 'original' ? data.original_categories : data.collected_categories;
+            const project = projects.find(p => p.id === id);
+            if (!project) return;
+
+            document.getElementById('projectModalTitle').textContent = '编辑项目';
+            document.getElementById('projectModalHeader').className = 'modal-header ' + (type === 'original' ? 'original-header text-white' : 'collected-header text-white');
+            document.getElementById('projectId').value = project.id;
+            document.getElementById('projectType').value = type;
+            document.getElementById('projectName').value = project.name;
+            document.getElementById('projectDescription').value = project.description || '';
+            document.getElementById('projectCategory').innerHTML = '<option value="">无分类</option>' + 
+                categories.map(c => `<option value="${c.name}" ${c.name === project.category ? 'selected' : ''}>${c.name}</option>`).join('');
+            document.getElementById('projectTechStack').value = (project.tech_stack || []).join(', ');
+            document.getElementById('projectStatus').value = project.status;
+            document.getElementById('projectSourceUrl').value = project.source_url || '';
+            document.getElementById('projectLocalPath').value = project.local_path || '';
+
+            new bootstrap.Modal(document.getElementById('projectModal')).show();
+        }
+
+        async function saveProject() {
+            const id = document.getElementById('projectId').value;
+            const type = document.getElementById('projectType').value;
+            
+            const projectData = {
+                name: document.getElementById('projectName').value,
+                description: document.getElementById('projectDescription').value,
+                category: document.getElementById('projectCategory').value,
+                tech_stack: document.getElementById('projectTechStack').value.split(',').map(s => s.trim()).filter(s => s),
+                status: document.getElementById('projectStatus').value,
+                source_url: document.getElementById('projectSourceUrl').value,
+                local_path: document.getElementById('projectLocalPath').value
+            };
+
+            if (!projectData.name) return;
+
+            const url = id ? `/api/${type}/${id}` : `/api/${type}`;
+            const method = id ? 'PUT' : 'POST';
+            
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(projectData)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('projectModal')).hide();
+                await loadData();
+                if (id) showProjectDetail(parseInt(id), type);
+            }
+        }
+
+        async function deleteProject(id, type) {
+            const res = await fetch(`/api/${type}/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                backToList();
+                loadData();
+            }
+        }
+
+        function showAddCategoryModal(type) {
+            document.getElementById('categoryType').value = type;
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryColor').value = type === 'original' ? '#667eea' : '#28a745';
+            new bootstrap.Modal(document.getElementById('categoryModal')).show();
+        }
+
+        async function saveCategory() {
+            const type = document.getElementById('categoryType').value;
+            const categoryData = {
+                name: document.getElementById('categoryName').value,
+                color: document.getElementById('categoryColor').value
+            };
+
+            if (!categoryData.name) return;
+
+            const res = await fetch(`/api/${type}/categories`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(categoryData)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
+                loadData();
+            }
+        }
+
+        async function deleteCategory(id, type) {
+            const res = await fetch(`/api/${type}/categories/${id}`, { method: 'DELETE' });
+            if (res.ok) loadData();
+        }
+
+        let currentPlan = null;
+
+        async function loadProjectPlan(projectId) {
+            try {
+                const res = await fetch(`/api/plans/${projectId}`);
+                if (res.ok) {
+                    currentPlan = await res.json();
+                    renderPlan();
+                } else {
+                    currentPlan = null;
+                    renderPlan();
+                }
+            } catch {
+                currentPlan = null;
+                renderPlan();
+            }
+        }
+
+        function renderPlan() {
+            const container = document.getElementById('planSection');
+            
+            if (!currentPlan || currentPlan.error) {
+                container.innerHTML = `
+                    <div class="text-muted text-center py-3">
+                        <i class="bi bi-calendar-plus" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">暂无计划，点击上方按钮添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const priorityColors = { high: '#dc3545', medium: '#ffc107', low: '#28a745' };
+            const priorityTexts = { high: '高', medium: '中', low: '低' };
+            const statusTexts = { pending: '待处理', in_progress: '进行中', completed: '已完成', cancelled: '已取消' };
+            const statusColors = { pending: '#6c757d', in_progress: '#0d6efd', completed: '#198754', cancelled: '#dc3545' };
+
+            container.innerHTML = `
+                <div class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">${currentPlan.title}</h6>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="badge" style="background: ${priorityColors[currentPlan.priority]}">${priorityTexts[currentPlan.priority]}优先级</span>
+                                <span class="badge" style="background: ${statusColors[currentPlan.status]}">${statusTexts[currentPlan.status]}</span>
+                            </div>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editPlan()"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-danger" onclick="deletePlan()"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                    ${currentPlan.description ? `<p class="text-muted small mb-2">${currentPlan.description}</p>` : ''}
+                    <div class="d-flex gap-3 text-muted small mb-2">
+                        ${currentPlan.start_date ? `<span><i class="bi bi-calendar"></i> ${currentPlan.start_date}</span>` : ''}
+                        ${currentPlan.end_date ? `<span><i class="bi bi-calendar-check"></i> ${currentPlan.end_date}</span>` : ''}
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" role="progressbar" style="width: ${currentPlan.progress || 0}%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                    </div>
+                    <small class="text-muted">进度: ${currentPlan.progress || 0}%</small>
+                </div>
+            `;
+        }
+
+        function showPlanModal(isEdit = false) {
+            document.getElementById('planModalTitle').textContent = isEdit ? '编辑计划' : '添加计划';
+            
+            if (isEdit && currentPlan) {
+                document.getElementById('planTitle').value = currentPlan.title || '';
+                document.getElementById('planType').value = currentPlan.plan_type || 'short_term';
+                document.getElementById('planStartDate').value = currentPlan.start_date || '';
+                document.getElementById('planEndDate').value = currentPlan.end_date || '';
+                document.getElementById('planPriority').value = currentPlan.priority || 'medium';
+                document.getElementById('planStatus').value = currentPlan.status || 'pending';
+                document.getElementById('planProgress').value = currentPlan.progress || 0;
+                document.getElementById('progressValue').textContent = (currentPlan.progress || 0) + '%';
+                document.getElementById('planDescription').value = currentPlan.description || '';
+            } else {
+                document.getElementById('planTitle').value = '';
+                document.getElementById('planType').value = 'short_term';
+                document.getElementById('planStartDate').value = '';
+                document.getElementById('planEndDate').value = '';
+                document.getElementById('planPriority').value = 'medium';
+                document.getElementById('planStatus').value = 'pending';
+                document.getElementById('planProgress').value = 0;
+                document.getElementById('progressValue').textContent = '0%';
+                document.getElementById('planDescription').value = '';
+            }
+            
+            new bootstrap.Modal(document.getElementById('planModal')).show();
+        }
+
+        function editPlan() {
+            showPlanModal(true);
+        }
+
+        async function savePlan() {
+            const title = document.getElementById('planTitle').value;
+            if (!title) return;
+
+            const planData = {
+                title: title,
+                plan_type: document.getElementById('planType').value,
+                start_date: document.getElementById('planStartDate').value,
+                end_date: document.getElementById('planEndDate').value,
+                priority: document.getElementById('planPriority').value,
+                status: document.getElementById('planStatus').value,
+                progress: parseInt(document.getElementById('planProgress').value),
+                description: document.getElementById('planDescription').value
+            };
+
+            const isEdit = currentPlan && !currentPlan.error;
+            const url = `/api/plans/${currentProjectId}`;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(planData)
+                });
+
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+                    loadProjectPlan(currentProjectId);
+                }
+            } catch (e) {}
+        }
+
+        async function deletePlan() {
+            try {
+                const res = await fetch(`/api/plans/${currentProjectId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    currentPlan = null;
+                    renderPlan();
+                }
+            } catch (e) {}
+        }
+
+        function restorePageState() {
+            const hash = location.hash.slice(1);
+            if (hash) {
+                const parts = hash.split('/');
+                if (parts.length === 2) {
+                    const type = parts[0];
+                    const id = parseInt(parts[1]);
+                    if ((type === 'original' || type === 'collected') && !isNaN(id)) {
+                        showProjectDetail(id, type);
+                        return;
+                    }
+                }
+            }
+            
+            const savedScroll = sessionStorage.getItem('projectScrollPosition');
+            if (savedScroll && !hash) {
+                setTimeout(() => window.scrollTo(0, parseInt(savedScroll)), 50);
+            }
+        }
+
+        function saveScrollPosition() {
+            if (!location.hash) {
+                sessionStorage.setItem('projectScrollPosition', window.scrollY.toString());
+            }
+        }
+
+        window.addEventListener('scroll', saveScrollPosition);
+
+        window.addEventListener('hashchange', () => {
+            const hash = location.hash.slice(1);
+            if (!hash) {
+                document.getElementById('projectListPage').classList.remove('hidden');
+                document.getElementById('projectDetailPage').classList.remove('active');
+                setTimeout(() => {
+                    const savedScroll = sessionStorage.getItem('projectScrollPosition');
+                    if (savedScroll) {
+                        window.scrollTo(0, parseInt(savedScroll));
+                    }
+                }, 100);
+            }
+        });
+
+        loadData().then(() => restorePageState());
+    </script>
+</body>
+</html>

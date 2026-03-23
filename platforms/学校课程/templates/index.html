@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学校课程管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        .course-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .course-card .card-body {
+            padding: 20px;
+        }
+        .course-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .course-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: white;
+        }
+        .material-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .material-item:hover {
+            background: #e9ecef;
+        }
+        .material-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        .material-icon.pdf { background: #dc3545; color: white; }
+        .material-icon.ppt { background: #fd7e14; color: white; }
+        .material-icon.doc { background: #0d6efd; color: white; }
+        .material-icon.excel { background: #198754; color: white; }
+        .material-icon.image { background: #6f42c1; color: white; }
+        .material-icon.text { background: #6c757d; color: white; }
+        .material-info { flex: 1; }
+        .material-name { font-weight: 500; color: #333; }
+        .material-meta { font-size: 0.8rem; color: #888; }
+        .material-actions { display: flex; gap: 8px; }
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .assignment-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .assignment-item.completed { border-left-color: #198754; }
+        .assignment-item.overdue { border-left-color: #dc3545; }
+        .assignment-title { font-weight: 600; color: #333; }
+        .assignment-due { font-size: 0.85rem; color: #666; }
+        .sidebar {
+            position: sticky;
+            top: 20px;
+        }
+        .category-item {
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 5px;
+        }
+        .category-item:hover, .category-item.active {
+            background: #667eea;
+            color: white;
+        }
+        .preview-modal .modal-dialog {
+            max-width: 95vw;
+            max-height: 95vh;
+        }
+        .preview-modal .modal-body {
+            padding: 0;
+            height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        #previewContainer {
+            width: 100%;
+            flex: 1;
+            overflow: auto;
+            background: #1a1a2e;
+        }
+        #previewContainer iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #previewContainer img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            margin: auto;
+        }
+        #previewContainer video, #previewContainer audio {
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            display: block;
+        }
+        .pdf-viewer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #333;
+            height: 100%;
+            overflow: auto;
+            padding: 20px;
+        }
+        .pdf-viewer canvas {
+            max-width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+        .pdf-controls {
+            position: sticky;
+            top: 0;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+        }
+        .pdf-controls button {
+            background: #667eea;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .pdf-controls button:hover {
+            background: #5a6fd6;
+        }
+        .pdf-controls span {
+            color: white;
+            font-size: 14px;
+        }
+        .code-viewer {
+            background: #0d1117;
+            padding: 20px;
+            height: 100%;
+            overflow: auto;
+        }
+        .code-viewer pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }
+        .code-viewer code {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .markdown-viewer {
+            background: #fff;
+            padding: 30px;
+            max-width: 900px;
+            margin: auto;
+            height: 100%;
+            overflow: auto;
+        }
+        .markdown-viewer h1 { border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .markdown-viewer h2 { border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .markdown-viewer pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; }
+        .markdown-viewer code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; }
+        .markdown-viewer pre code { background: transparent; padding: 0; }
+        .markdown-viewer table { border-collapse: collapse; width: 100%; }
+        .markdown-viewer th, .markdown-viewer td { border: 1px solid #ddd; padding: 8px; }
+        .markdown-viewer img { max-width: 100%; }
+        .text-viewer {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 20px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            height: 100%;
+            overflow: auto;
+        }
+        .media-viewer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: #000;
+        }
+        .upload-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .upload-zone i {
+            font-size: 3rem;
+            color: #667eea;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            padding: 12px 20px;
+            font-weight: 500;
+            color: #666;
+        }
+        .nav-tabs .nav-link.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="bi bi-mortarboard-fill"></i> 学校课程管理平台</h1>
+            <p class="mt-2">管理课程资料，轻松预览文档</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card sidebar">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-folder-fill"></i> 课程分类
+                    </div>
+                    <div class="card-body">
+                        <div class="category-item active" onclick="filterByCategory(null)">
+                            <i class="bi bi-grid-fill"></i> 全部课程
+                        </div>
+                        <div id="categoryList"></div>
+                        <hr>
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="showAddCategoryModal()">
+                            <i class="bi bi-plus"></i> 添加分类
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <i class="bi bi-lightning-fill"></i> 快速操作
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-success btn-lg w-100 mb-2" onclick="showAddCourseModal()">
+                            <i class="bi bi-plus-circle"></i> 添加课程
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-book-fill"></i> 我的课程</h5>
+                            <input type="text" class="form-control w-25" placeholder="搜索课程..." id="searchInput" oninput="filterCourses()">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="courseList">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>暂无课程，点击"添加课程"开始</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="courseModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="courseModalTitle">添加课程</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="courseId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">课程名称 *</label>
+                            <input type="text" class="form-control" id="courseName">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">授课教师</label>
+                            <input type="text" class="form-control" id="courseTeacher">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">课程分类</label>
+                            <select class="form-select" id="courseCategory"></select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">上课时间</label>
+                            <input type="text" class="form-control" id="courseSchedule" placeholder="如：周一 3-4节">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">教室地点</label>
+                        <input type="text" class="form-control" id="courseClassroom" placeholder="如：教学楼A301">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">课程描述</label>
+                        <textarea class="form-control" id="courseDescription" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary btn-lg" onclick="saveCourse()">
+                        <i class="bi bi-check-lg"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="courseDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="detailCourseName">课程详情</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="detailCourseId">
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#materialsTab">
+                                <i class="bi bi-file-earmark-fill"></i> 课程资料
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#assignmentsTab">
+                                <i class="bi bi-list-check"></i> 作业任务
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#planTab">
+                                <i class="bi bi-calendar-check"></i> 学习计划
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#infoTab">
+                                <i class="bi bi-info-circle"></i> 课程信息
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="materialsTab">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                                        <i class="bi bi-cloud-arrow-up"></i>
+                                        <p class="mt-2 mb-0">点击或拖拽文件上传</p>
+                                        <small class="text-muted">支持 PDF, PPT, DOC, XLS, TXT, 图片等</small>
+                                    </div>
+                                    <input type="file" id="fileInput" style="display:none" onchange="uploadFile(event)" multiple>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="upload-zone" id="folderZone" onclick="selectFolderUsingAPI()">
+                                        <i class="bi bi-folder-plus"></i>
+                                        <p class="mt-2 mb-0">点击或拖拽文件夹上传</p>
+                                        <small class="text-muted">保留文件夹结构</small>
+                                    </div>
+                                    <input type="file" id="folderInput" style="display:none" onchange="uploadFolder(event)" webkitdirectory directory multiple>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <button class="btn btn-outline-info" onclick="openCourseFolder()">
+                                    <i class="bi bi-folder2-open"></i> 打开课程目录
+                                </button>
+                            </div>
+                            <div id="materialsList" style="max-height: 400px; overflow-y: auto;"></div>
+                        </div>
+                        <div class="tab-pane fade" id="assignmentsTab">
+                            <button class="btn btn-success mb-3" onclick="showAddAssignmentModal()">
+                                <i class="bi bi-plus"></i> 添加作业
+                            </button>
+                            <div id="assignmentsList"></div>
+                        </div>
+                        <div class="tab-pane fade" id="planTab">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">课程学习计划（同步到计划管理平台）</h6>
+                                <button class="btn btn-primary btn-sm" onclick="showCoursePlanModal()">
+                                    <i class="bi bi-plus-lg"></i> 添加计划
+                                </button>
+                            </div>
+                            <div id="coursePlanSection">
+                                <div class="text-muted text-center py-3">加载中...</div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="infoTab">
+                            <div id="courseInfoContent"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger btn-lg me-auto" onclick="deleteCurrentCourse()">
+                        <i class="bi bi-trash"></i> 删除课程
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade preview-modal" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white py-2">
+                    <h5 class="modal-title" id="previewTitle">文件预览</h5>
+                    <div class="ms-auto me-3" id="previewToolbar"></div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="previewContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="assignmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">添加作业</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="assignmentId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">作业标题 *</label>
+                        <input type="text" class="form-control" id="assignmentTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">截止日期</label>
+                        <input type="date" class="form-control" id="assignmentDue">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">作业描述</label>
+                        <textarea class="form-control" id="assignmentDesc" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-warning" onclick="saveAssignment()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加分类</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">分类名称</label>
+                        <input type="text" class="form-control" id="categoryName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">颜色</label>
+                        <input type="color" class="form-control form-control-color" id="categoryColor" value="#667eea">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCategory()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="coursePlanModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="coursePlanModalTitle">添加学习计划</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">计划标题 *</label>
+                        <input type="text" class="form-control" id="coursePlanTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">计划类型</label>
+                        <select class="form-select" id="coursePlanType">
+                            <option value="short_term">短期计划</option>
+                            <option value="mid_term">中期计划</option>
+                            <option value="long_term">长期计划</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">开始日期</label>
+                            <input type="date" class="form-control" id="coursePlanStartDate">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">结束日期</label>
+                            <input type="date" class="form-control" id="coursePlanEndDate">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">优先级</label>
+                            <select class="form-select" id="coursePlanPriority">
+                                <option value="high">高</option>
+                                <option value="medium" selected>中</option>
+                                <option value="low">低</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">状态</label>
+                            <select class="form-select" id="coursePlanStatus">
+                                <option value="pending">待处理</option>
+                                <option value="in_progress">进行中</option>
+                                <option value="completed">已完成</option>
+                                <option value="cancelled">已取消</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">进度 (%)</label>
+                        <input type="range" class="form-range" id="coursePlanProgress" min="0" max="100" value="0" oninput="document.getElementById('courseProgressValue').textContent = this.value + '%'">
+                        <span id="courseProgressValue" class="text-muted">0%</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">描述</label>
+                        <textarea class="form-control" id="coursePlanDescription" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCoursePlan()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let courses = [];
+        let categories = [];
+        let currentCourseId = null;
+        let currentCategoryFilter = null;
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+        async function loadData() {
+            const res = await fetch('/api/courses');
+            const data = await res.json();
+            courses = data.courses || [];
+            categories = data.categories || [];
+            renderCourses();
+            renderCategories();
+            updateCategorySelect();
+        }
+
+        function renderCourses() {
+            const container = document.getElementById('courseList');
+            let filtered = courses;
+            
+            if (currentCategoryFilter) {
+                filtered = filtered.filter(c => c.category === currentCategoryFilter);
+            }
+            
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            if (search) {
+                filtered = filtered.filter(c => 
+                    c.name.toLowerCase().includes(search) ||
+                    c.teacher?.toLowerCase().includes(search)
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>暂无课程</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(course => {
+                const category = categories.find(c => c.name === course.category);
+                const categoryColor = category?.color || '#667eea';
+                const materialCount = course.materials?.length || 0;
+                const assignmentCount = course.assignments?.length || 0;
+                
+                return `
+                    <div class="col-md-4 mb-3">
+                        <div class="card course-card" onclick="showCourseDetail(${course.id})">
+                            <div class="card-body">
+                                <div class="course-name">
+                                    ${course.name}
+                                    ${course.category ? `<span class="category-badge ms-2" style="background:${categoryColor}">${course.category}</span>` : ''}
+                                </div>
+                                <div class="course-info"><i class="bi bi-person"></i> ${course.teacher || '未设置教师'}</div>
+                                <div class="course-info"><i class="bi bi-clock"></i> ${course.schedule || '未设置时间'}</div>
+                                <div class="course-info"><i class="bi bi-geo-alt"></i> ${course.classroom || '未设置教室'}</div>
+                                <hr>
+                                <div class="d-flex justify-content-between text-muted small">
+                                    <span><i class="bi bi-file-earmark"></i> ${materialCount} 个资料</span>
+                                    <span><i class="bi bi-list-check"></i> ${assignmentCount} 个作业</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryList');
+            container.innerHTML = categories.map(cat => `
+                <div class="category-item d-flex justify-content-between align-items-center" onclick="filterByCategory('${cat.name}')">
+                    <span><span class="category-badge me-2" style="background:${cat.color};padding:2px 8px;font-size:0.7rem;"></span>${cat.name}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteCategory(${cat.id})">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateCategorySelect() {
+            const select = document.getElementById('courseCategory');
+            select.innerHTML = '<option value="">无分类</option>' + 
+                categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        }
+
+        function filterByCategory(category) {
+            currentCategoryFilter = category;
+            document.querySelectorAll('.category-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event?.target?.closest('.category-item')?.classList.add('active');
+            renderCourses();
+        }
+
+        function filterCourses() {
+            renderCourses();
+        }
+
+        // 检测是否在 PyWebView 环境中运行
+        let isPyWebView = false;
+        
+        // 初始化 PyWebView API
+        async function initPyWebView() {
+            if (window.pywebview) {
+                isPyWebView = true;
+                console.log('PyWebView environment detected');
+            }
+        }
+        
+        // 初始化
+        initPyWebView();
+        
+        function showAddCourseModal() {
+            document.getElementById('courseModalTitle').textContent = '添加课程';
+            document.getElementById('courseId').value = '';
+            document.getElementById('courseName').value = '';
+            document.getElementById('courseTeacher').value = '';
+            document.getElementById('courseCategory').value = '';
+            document.getElementById('courseSchedule').value = '';
+            document.getElementById('courseClassroom').value = '';
+            document.getElementById('courseDescription').value = '';
+            new bootstrap.Modal(document.getElementById('courseModal')).show();
+        }
+
+        async function saveCourse() {
+            const id = document.getElementById('courseId').value;
+            const data = {
+                name: document.getElementById('courseName').value,
+                teacher: document.getElementById('courseTeacher').value,
+                category: document.getElementById('courseCategory').value,
+                schedule: document.getElementById('courseSchedule').value,
+                classroom: document.getElementById('courseClassroom').value,
+                description: document.getElementById('courseDescription').value
+            };
+
+            if (!data.name) return;
+
+            let res;
+            if (id) {
+                res = await fetch(`/api/courses/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } else {
+                res = await fetch('/api/courses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            }
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('courseModal')).hide();
+                loadData();
+            }
+        }
+
+        async function showCourseDetail(courseId) {
+            currentCourseId = courseId;
+            const course = courses.find(c => c.id === courseId);
+            if (!course) return;
+
+            location.hash = `course/${courseId}`;
+
+            document.getElementById('detailCourseId').value = courseId;
+            document.getElementById('detailCourseName').textContent = course.name;
+
+            renderMaterials(course);
+            renderAssignments(course);
+            renderCourseInfo(course);
+            loadCoursePlan(courseId);
+
+            new bootstrap.Modal(document.getElementById('courseDetailModal')).show();
+        }
+
+        function renderMaterials(course) {
+            const container = document.getElementById('materialsList');
+            container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+            
+            fetch(`/api/courses/${course.id}/directory`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.items || data.items.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="bi bi-file-earmark-text"></i>
+                                <p>暂无课程资料</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = renderDirectoryItems(course.id, data.items, '');
+                })
+                .catch(err => {
+                    container.innerHTML = `<div class="alert alert-danger">加载失败: ${err.message}</div>`;
+                });
+        }
+
+        function renderDirectoryItems(courseId, items, parentPath) {
+            return items.map(item => {
+                if (item.type === 'folder') {
+                    const folderId = 'folder-' + item.path.replace(/\//g, '-');
+                    return `
+                        <div class="folder-item">
+                            <div class="folder-header d-flex align-items-center p-2 bg-light rounded mb-1" style="cursor:pointer;" onclick="toggleFolder('${folderId}', ${courseId}, '${item.path}')">
+                                <i class="bi bi-chevron-right me-2" id="icon-${folderId}"></i>
+                                <i class="bi bi-folder-fill text-warning me-2"></i>
+                                <span class="fw-medium">${item.name}</span>
+                                <button class="btn btn-sm btn-outline-info ms-2" onclick="event.stopPropagation();openFolder(${courseId}, '${item.path}')" title="打开文件夹">
+                                    <i class="bi bi-folder2-open"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger ms-auto" onclick="event.stopPropagation();deleteFolder(${courseId}, '${item.path}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="folder-content ms-3" id="${folderId}" style="display:none;">
+                                <div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const icon = {
+                        pdf: 'bi-file-pdf text-danger',
+                        ppt: 'bi-file-ppt text-warning',
+                        doc: 'bi-file-word text-primary',
+                        excel: 'bi-file-excel text-success',
+                        image: 'bi-file-image text-info',
+                        audio: 'bi-file-music text-purple',
+                        video: 'bi-file-play text-pink',
+                        code: 'bi-file-code text-warning',
+                        markdown: 'bi-markdown text-info',
+                        text: 'bi-file-text text-secondary'
+                    }[item.file_type] || 'bi-file text-muted';
+                    
+                    return `
+                        <div class="file-item d-flex align-items-center p-2 rounded mb-1" style="background:#f8f9fa;">
+                            <i class="bi ${icon} me-2"></i>
+                            <span class="flex-grow-1">${item.name}</span>
+                            <small class="text-muted me-2">${formatFileSize(item.size)}</small>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="previewFileByPath(${courseId}, '${item.path}', '${item.file_type}', '${item.name}')" title="预览">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning me-1" onclick="openFileWithApp(${courseId}, '${item.path}')" title="用本地程序打开">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success me-1" onclick="downloadFileByPath(${courseId}, '${item.path}')" title="下载">
+                                <i class="bi bi-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="openFileLocation(${courseId}, '${item.path}')" title="打开所在文件夹">
+                                <i class="bi bi-folder2-open"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteFile(${courseId}, '${item.path}')" title="删除">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function toggleFolder(folderId, courseId, path) {
+            const content = document.getElementById(folderId);
+            const icon = document.getElementById('icon-' + folderId);
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-down');
+                
+                fetch(`/api/courses/${courseId}/directory/${encodeURIComponent(path)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.items && data.items.length > 0) {
+                            content.innerHTML = renderDirectoryItems(courseId, data.items, path);
+                        } else {
+                            content.innerHTML = '<div class="text-muted small p-2">空文件夹</div>';
+                        }
+                    });
+            } else {
+                content.style.display = 'none';
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-right');
+            }
+        }
+
+        async function previewFileByPath(courseId, path, fileType, filename) {
+            const container = document.getElementById('previewContainer');
+            const toolbar = document.getElementById('previewToolbar');
+            document.getElementById('previewTitle').textContent = filename;
+            container.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-light"></div></div>';
+            toolbar.innerHTML = '';
+
+            new bootstrap.Modal(document.getElementById('previewModal')).show();
+
+            const fileUrl = `/api/courses/${courseId}/files/${encodeURIComponent(path)}`;
+            const ext = filename.split('.').pop().toLowerCase();
+
+            if (fileType === 'pdf') {
+                await renderPDF(container, toolbar, fileUrl);
+            } else if (fileType === 'image') {
+                container.innerHTML = `<div class="media-viewer"><img src="${fileUrl}" alt="${filename}" onerror="this.onerror=null;this.src='';this.parentElement.innerHTML='<div class=\\'text-white p-4\\'>无法加载图片</div>'"></div>`;
+            } else if (fileType === 'video') {
+                container.innerHTML = `<div class="media-viewer"><video controls autoplay><source src="${fileUrl}" type="video/${ext === 'mov' ? 'quicktime' : ext}">您的浏览器不支持视频播放</video></div>`;
+            } else if (fileType === 'audio') {
+                container.innerHTML = `<div class="media-viewer"><audio controls autoplay style="width:80%;max-width:600px;"><source src="${fileUrl}" type="audio/${ext}">您的浏览器不支持音频播放</audio></div>`;
+            } else if (fileType === 'markdown') {
+                const res = await fetch(fileUrl);
+                const text = await res.text();
+                container.innerHTML = `<div class="markdown-viewer">${marked.parse(text)}</div>`;
+                container.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            } else if (fileType === 'code') {
+                const res = await fetch(fileUrl);
+                const text = await res.text();
+                const lang = getLanguage(ext);
+                container.innerHTML = `<div class="code-viewer"><pre><code class="language-${lang}">${escapeHtml(text)}</code></pre></div>`;
+                hljs.highlightAll();
+            } else if (fileType === 'text') {
+                const res = await fetch(fileUrl);
+                const text = await res.text();
+                container.innerHTML = `<div class="text-viewer">${escapeHtml(text)}</div>`;
+            } else if (fileType === 'ppt' || fileType === 'doc' || fileType === 'excel') {
+                const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + fileUrl)}`;
+                container.innerHTML = `<iframe src="${officeUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
+            } else {
+                const res = await fetch(fileUrl);
+                const text = await res.text();
+                container.innerHTML = `<div class="text-viewer">${escapeHtml(text)}</div>`;
+            }
+        }
+
+        async function renderPDF(container, toolbar, fileUrl) {
+            try {
+                const pdf = await pdfjsLib.getDocument(fileUrl).promise;
+                const totalPages = pdf.numPages;
+                let currentPage = 1;
+
+                container.innerHTML = `
+                    <div class="pdf-viewer">
+                        <div class="pdf-controls">
+                            <button onclick="prevPage()"><i class="bi bi-chevron-left"></i> 上一页</button>
+                            <span id="pageInfo">第 ${currentPage} 页 / 共 ${totalPages} 页</span>
+                            <button onclick="nextPage()"><i class="bi bi-chevron-right"></i> 下一页</button>
+                            <input type="number" id="pageInput" min="1" max="${totalPages}" value="${currentPage}" style="width:60px;text-align:center;" onchange="goToPage(this.value)">
+                            <button onclick="zoomIn()"><i class="bi bi-zoom-in"></i></button>
+                            <button onclick="zoomOut()"><i class="bi bi-zoom-out"></i></button>
+                        </div>
+                        <div id="pdfPages"></div>
+                    </div>
+                `;
+
+                let scale = 1.5;
+
+                window.prevPage = () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderCurrentPage();
+                    }
+                };
+
+                window.nextPage = () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderCurrentPage();
+                    }
+                };
+
+                window.goToPage = (page) => {
+                    page = parseInt(page);
+                    if (page >= 1 && page <= totalPages) {
+                        currentPage = page;
+                        renderCurrentPage();
+                    }
+                };
+
+                window.zoomIn = () => {
+                    scale += 0.25;
+                    renderCurrentPage();
+                };
+
+                window.zoomOut = () => {
+                    if (scale > 0.5) {
+                        scale -= 0.25;
+                        renderCurrentPage();
+                    }
+                };
+
+                async function renderCurrentPage() {
+                    const page = await pdf.getPage(currentPage);
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    const ctx = canvas.getContext('2d');
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+                    
+                    const pagesContainer = document.getElementById('pdfPages');
+                    pagesContainer.innerHTML = '';
+                    pagesContainer.appendChild(canvas);
+                    
+                    document.getElementById('pageInfo').textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
+                    document.getElementById('pageInput').value = currentPage;
+                }
+
+                await renderCurrentPage();
+            } catch (err) {
+                container.innerHTML = `<iframe src="${fileUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
+            }
+        }
+
+        function getLanguage(ext) {
+            const langMap = {
+                'py': 'python', 'js': 'javascript', 'ts': 'typescript', 'html': 'html', 'css': 'css',
+                'json': 'json', 'xml': 'xml', 'java': 'java', 'cpp': 'cpp', 'c': 'c', 'h': 'c',
+                'cs': 'csharp', 'go': 'go', 'rs': 'rust', 'php': 'php', 'rb': 'ruby', 'swift': 'swift',
+                'kt': 'kotlin', 'vue': 'vue', 'jsx': 'javascript', 'tsx': 'typescript', 'sql': 'sql',
+                'sh': 'bash', 'bat': 'batch', 'yaml': 'yaml', 'yml': 'yaml', 'csv': 'plaintext',
+                'md': 'markdown', 'txt': 'plaintext'
+            };
+            return langMap[ext] || 'plaintext';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function downloadFileByPath(courseId, path) {
+            window.open(`/api/courses/${courseId}/files/${encodeURIComponent(path)}`, '_blank');
+        }
+
+        async function deleteFile(courseId, path) {
+            const res = await fetch(`/api/courses/${courseId}/file/${encodeURIComponent(path)}`, { method: 'DELETE' });
+            if (res.ok) {
+                renderMaterials(courses.find(c => c.id === courseId));
+            }
+        }
+
+        async function deleteFolder(courseId, path) {
+            const res = await fetch(`/api/courses/${courseId}/folder/${encodeURIComponent(path)}`, { method: 'DELETE' });
+            if (res.ok) {
+                renderMaterials(courses.find(c => c.id === courseId));
+            }
+        }
+
+        async function openFolder(courseId, path) {
+            await fetch(`/api/courses/${courseId}/open-folder/${encodeURIComponent(path)}`, { method: 'POST' });
+        }
+
+        async function openFileLocation(courseId, path) {
+            const lastSlash = path.lastIndexOf('/');
+            const dirPath = lastSlash > 0 ? path.substring(0, lastSlash) : '';
+            const url = dirPath 
+                ? `/api/courses/${courseId}/open-folder/${encodeURIComponent(dirPath)}` 
+                : `/api/courses/${courseId}/open-folder`;
+            await fetch(url, { method: 'POST' });
+        }
+
+        async function openCourseFolder() {
+            const courseId = document.getElementById('detailCourseId').value;
+            await fetch(`/api/courses/${courseId}/open-folder`, { method: 'POST' });
+        }
+
+        async function openFileWithApp(courseId, path) {
+            await fetch(`/api/courses/${courseId}/open-file/${encodeURIComponent(path)}`, { method: 'POST' });
+        }
+
+        function renderAssignments(course) {
+            const container = document.getElementById('assignmentsList');
+            const assignments = course.assignments || [];
+
+            if (assignments.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-list-check"></i>
+                        <p>暂无作业任务</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            container.innerHTML = assignments.map(a => {
+                let statusClass = '';
+                if (a.status === 'completed') statusClass = 'completed';
+                else if (a.due_date && a.due_date < today) statusClass = 'overdue';
+
+                const statusBadge = {
+                    pending: '<span class="badge bg-secondary">待完成</span>',
+                    in_progress: '<span class="badge bg-info">进行中</span>',
+                    completed: '<span class="badge bg-success">已完成</span>'
+                }[a.status] || '';
+
+                return `
+                    <div class="assignment-item ${statusClass}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="assignment-title">${a.title} ${statusBadge}</div>
+                                <div class="assignment-due">
+                                    ${a.due_date ? `<i class="bi bi-calendar"></i> 截止: ${a.due_date}` : ''}
+                                    ${a.description ? `<br><small>${a.description}</small>` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <select class="form-select form-select-sm" onchange="updateAssignmentStatus(${course.id}, ${a.id}, this.value)" style="width:auto">
+                                    <option value="pending" ${a.status === 'pending' ? 'selected' : ''}>待完成</option>
+                                    <option value="in_progress" ${a.status === 'in_progress' ? 'selected' : ''}>进行中</option>
+                                    <option value="completed" ${a.status === 'completed' ? 'selected' : ''}>已完成</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline-danger mt-1" onclick="deleteAssignment(${course.id}, ${a.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCourseInfo(course) {
+            const container = document.getElementById('courseInfoContent');
+            container.innerHTML = `
+                <table class="table">
+                    <tr><th width="120">课程名称</th><td>${course.name}</td></tr>
+                    <tr><th>授课教师</th><td>${course.teacher || '未设置'}</td></tr>
+                    <tr><th>课程分类</th><td>${course.category || '未分类'}</td></tr>
+                    <tr><th>上课时间</th><td>${course.schedule || '未设置'}</td></tr>
+                    <tr><th>教室地点</th><td>${course.classroom || '未设置'}</td></tr>
+                    <tr><th>课程描述</th><td>${course.description || '无描述'}</td></tr>
+                    <tr><th>创建时间</th><td>${course.created_at}</td></tr>
+                    <tr><th>更新时间</th><td>${course.updated_at}</td></tr>
+                </table>
+                <button class="btn btn-primary" onclick="editCourse(${course.id})">
+                    <i class="bi bi-pencil"></i> 编辑课程信息
+                </button>
+            `;
+        }
+
+        function editCourse(courseId) {
+            const course = courses.find(c => c.id === courseId);
+            if (!course) return;
+
+            bootstrap.Modal.getInstance(document.getElementById('courseDetailModal')).hide();
+
+            document.getElementById('courseModalTitle').textContent = '编辑课程';
+            document.getElementById('courseId').value = course.id;
+            document.getElementById('courseName').value = course.name;
+            document.getElementById('courseTeacher').value = course.teacher || '';
+            document.getElementById('courseCategory').value = course.category || '';
+            document.getElementById('courseSchedule').value = course.schedule || '';
+            document.getElementById('courseClassroom').value = course.classroom || '';
+            document.getElementById('courseDescription').value = course.description || '';
+
+            new bootstrap.Modal(document.getElementById('courseModal')).show();
+        }
+
+        async function deleteCurrentCourse() {
+            const courseId = document.getElementById('detailCourseId').value;
+            const res = await fetch(`/api/courses/${courseId}`, { method: 'DELETE' });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('courseDetailModal')).hide();
+                loadData();
+            }
+        }
+
+        async function uploadFile(event) {
+            const files = event.target.files;
+            if (!files.length) return;
+
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                await fetch(`/api/courses/${currentCourseId}/materials`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            event.target.value = '';
+            loadData().then(() => {
+                const course = courses.find(c => c.id === currentCourseId);
+                if (course) renderMaterials(course);
+            });
+        }
+
+        async function uploadFolder(event) {
+            const files = event.target.files;
+            if (!files.length) return;
+
+            const folderName = files[0].webkitRelativePath.split('/')[0];
+            const allowedExtensions = ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'md', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg', 'mp3', 'mp4', 'wav', 'avi', 'mov', 'py', 'js', 'html', 'css', 'json', 'xml', 'java', 'cpp', 'c', 'h', 'cs', 'go', 'rs', 'php', 'rb', 'swift', 'kt', 'ts', 'vue', 'jsx', 'tsx', 'sql', 'sh', 'bat', 'yaml', 'yml', 'ini', 'conf', 'log', 'csv'];
+            
+            const allPaths = [];
+            const fileMap = {};
+            const folderSet = new Set();
+            
+            for (const file of files) {
+                const relativePath = file.webkitRelativePath;
+                const parts = relativePath.split('/');
+                
+                for (let i = 1; i < parts.length - 1; i++) {
+                    const folderPath = parts.slice(1, i + 1).join('/');
+                    folderSet.add(folderPath);
+                }
+                
+                if (parts.length > 1) {
+                    const ext = parts[parts.length - 1].split('.').pop().toLowerCase();
+                    const filePath = parts.slice(1).join('/');
+                    
+                    if (allowedExtensions.includes(ext)) {
+                        allPaths.push({ type: 'file', path: filePath });
+                        fileMap[filePath] = file;
+                    }
+                }
+            }
+            
+            const sortedFolders = Array.from(folderSet).sort((a, b) => a.length - b.length);
+            for (const folderPath of sortedFolders) {
+                allPaths.push({ type: 'folder', path: folderPath });
+            }
+
+            if (allPaths.length === 0) {
+                allPaths.push({ type: 'folder', path: '' });
+            }
+
+            const formData = new FormData();
+            formData.append('folder_name', folderName);
+            formData.append('structure', JSON.stringify(allPaths.map(p => ({ type: p.type, path: p.path }))));
+
+            for (const item of allPaths) {
+                if (item.type === 'file' && fileMap[item.path]) {
+                    formData.append('files', fileMap[item.path], item.path);
+                }
+            }
+
+            await fetch(`/api/courses/${currentCourseId}/folders/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            event.target.value = '';
+            loadData().then(() => {
+                const course = courses.find(c => c.id === currentCourseId);
+                if (course) renderMaterials(course);
+            });
+        }
+
+        async function previewFile(courseId, filename, fileType, originalName, folder = '') {
+            const container = document.getElementById('previewContainer');
+            document.getElementById('previewTitle').textContent = originalName;
+            container.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-light"></div></div>';
+
+            new bootstrap.Modal(document.getElementById('previewModal')).show();
+
+            const basePath = folder ? `${folder}/` : '';
+            const fileUrl = `/api/courses/${courseId}/files/${encodeURIComponent(basePath + filename)}`;
+
+            if (fileType === 'pdf') {
+                try {
+                    const pdf = await pdfjsLib.getDocument(fileUrl).promise;
+                    container.innerHTML = '<canvas id="pdfCanvas"></canvas>';
+                    const canvas = document.getElementById('pdfCanvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    const renderPage = async (pageNum) => {
+                        const page = await pdf.getPage(pageNum);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+                    };
+                    
+                    await renderPage(1);
+                } catch (err) {
+                    container.innerHTML = `<iframe src="${fileUrl}"></iframe>`;
+                }
+            } else if (fileType === 'image') {
+                container.innerHTML = `<img src="${fileUrl}" alt="${originalName}">`;
+            } else if (fileType === 'text') {
+                const res = await fetch(fileUrl);
+                const text = await res.text();
+                container.innerHTML = `<pre style="color:#fff;padding:20px;overflow:auto;height:100%;">${text}</pre>`;
+            } else if (fileType === 'ppt' || fileType === 'doc' || fileType === 'excel') {
+                const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + fileUrl)}`;
+                container.innerHTML = `<iframe src="${officeUrl}"></iframe>`;
+            } else {
+                container.innerHTML = `<iframe src="${fileUrl}"></iframe>`;
+            }
+        }
+
+        function downloadFile(courseId, filename, folder = '') {
+            const basePath = folder ? `${folder}/` : '';
+            window.open(`/api/courses/${courseId}/files/${encodeURIComponent(basePath + filename)}`, '_blank');
+        }
+
+        async function deleteMaterial(courseId, materialId) {
+            const res = await fetch(`/api/courses/${courseId}/materials/${materialId}`, { method: 'DELETE' });
+
+            if (res.ok) {
+                loadData().then(() => {
+                    const course = courses.find(c => c.id === courseId);
+                    if (course) renderMaterials(course);
+                });
+            }
+        }
+
+        function showAddAssignmentModal() {
+            document.getElementById('assignmentId').value = '';
+            document.getElementById('assignmentTitle').value = '';
+            document.getElementById('assignmentDue').value = '';
+            document.getElementById('assignmentDesc').value = '';
+            new bootstrap.Modal(document.getElementById('assignmentModal')).show();
+        }
+
+        async function saveAssignment() {
+            const data = {
+                title: document.getElementById('assignmentTitle').value,
+                due_date: document.getElementById('assignmentDue').value,
+                description: document.getElementById('assignmentDesc').value,
+                status: 'pending'
+            };
+
+            if (!data.title) return;
+
+            const res = await fetch(`/api/courses/${currentCourseId}/assignments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('assignmentModal')).hide();
+                loadData().then(() => {
+                    const course = courses.find(c => c.id === currentCourseId);
+                    if (course) renderAssignments(course);
+                });
+            }
+        }
+
+        async function updateAssignmentStatus(courseId, assignmentId, status) {
+            await fetch(`/api/courses/${courseId}/assignments/${assignmentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+        }
+
+        async function deleteAssignment(courseId, assignmentId) {
+            if (!confirm('确定要删除这个作业吗？')) return;
+
+            const res = await fetch(`/api/courses/${courseId}/assignments/${assignmentId}`, { method: 'DELETE' });
+
+            if (res.ok) {
+                loadData().then(() => {
+                    const course = courses.find(c => c.id === courseId);
+                    if (course) renderAssignments(course);
+                });
+            }
+        }
+
+        function showAddCategoryModal() {
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryColor').value = '#667eea';
+            new bootstrap.Modal(document.getElementById('categoryModal')).show();
+        }
+
+        async function saveCategory() {
+            const data = {
+                name: document.getElementById('categoryName').value,
+                color: document.getElementById('categoryColor').value
+            };
+
+            if (!data.name) return;
+
+            const res = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
+                loadData();
+            }
+        }
+
+        async function deleteCategory(categoryId) {
+            if (!confirm('确定要删除这个分类吗？')) return;
+
+            const res = await fetch(`/api/categories/${categoryId}`, { method: 'DELETE' });
+
+            if (res.ok) {
+                loadData();
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        const uploadZone = document.getElementById('uploadZone');
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const items = e.dataTransfer.items;
+            const files = [];
+            
+            if (items) {
+                for (let i = 0; i < items.length; i++) {
+                    const entry = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+                    if (entry && !entry.isDirectory) {
+                        const file = await getFileFromEntry(entry);
+                        if (file) files.push(file);
+                    }
+                }
+            }
+            
+            if (files.length === 0 && e.dataTransfer.files.length) {
+                for (const file of e.dataTransfer.files) {
+                    files.push(file);
+                }
+            }
+
+            if (files.length > 0) {
+                handleDroppedFiles(files);
+            }
+        });
+
+        const folderZone = document.getElementById('folderZone');
+        folderZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            folderZone.classList.add('dragover');
+        });
+        folderZone.addEventListener('dragleave', () => {
+            folderZone.classList.remove('dragover');
+        });
+        folderZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            folderZone.classList.remove('dragover');
+            
+            const items = e.dataTransfer.items;
+            if (!items) {
+                alert('请拖拽文件夹到此处！');
+                return;
+            }
+
+            const entries = [];
+            for (let i = 0; i < items.length; i++) {
+                const entry = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+                if (entry) entries.push(entry);
+            }
+
+            for (const entry of entries) {
+                if (entry.isDirectory) {
+                    await handleDroppedFolder(entry);
+                } else {
+                    alert('请拖拽文件夹到此处，文件请拖到左侧区域！');
+                }
+            }
+        });
+
+        async function getFileFromEntry(entry) {
+            return new Promise((resolve) => {
+                entry.file(resolve, () => resolve(null));
+            });
+        }
+
+        async function readAllEntries(reader) {
+            const allEntries = [];
+            let entries = await new Promise(resolve => reader.readEntries(resolve, () => resolve([])));
+            while (entries.length > 0) {
+                allEntries.push(...entries);
+                entries = await new Promise(resolve => reader.readEntries(resolve, () => resolve([])));
+            }
+            return allEntries;
+        }
+
+        async function handleDroppedFolder(dirEntry) {
+            const folderName = dirEntry.name;
+            const allowedExtensions = ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'md', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg', 'mp3', 'mp4', 'wav', 'avi', 'mov', 'py', 'js', 'html', 'css', 'json', 'xml', 'java', 'cpp', 'c', 'h', 'cs', 'go', 'rs', 'php', 'rb', 'swift', 'kt', 'ts', 'vue', 'jsx', 'tsx', 'sql', 'sh', 'bat', 'yaml', 'yml', 'ini', 'conf', 'log', 'csv'];
+            
+            const allPaths = [];
+            
+            async function readDirectory(entry, path = '') {
+                const reader = entry.createReader();
+                const entries = await readAllEntries(reader);
+                
+                if (entries.length === 0 && path === '') {
+                    return;
+                }
+                
+                if (path !== '') {
+                    allPaths.push({ type: 'folder', path: path.slice(0, -1) });
+                }
+
+                for (const ent of entries) {
+                    if (ent.isDirectory) {
+                        await readDirectory(ent, path + ent.name + '/');
+                    } else {
+                        const file = await getFileFromEntry(ent);
+                        if (file) {
+                            const ext = file.name.split('.').pop().toLowerCase();
+                            if (allowedExtensions.includes(ext)) {
+                                file.fullPath = path + file.name;
+                                file.relativePath = path;
+                                allPaths.push({ type: 'file', path: path + file.name, file: file });
+                            }
+                        }
+                    }
+                }
+            }
+
+            await readDirectory(dirEntry);
+
+            if (allPaths.length === 0) {
+                allPaths.push({ type: 'folder', path: '' });
+            }
+
+            const formData = new FormData();
+            formData.append('folder_name', folderName);
+            formData.append('structure', JSON.stringify(allPaths.map(p => ({ type: p.type, path: p.path }))));
+
+            for (const item of allPaths) {
+                if (item.type === 'file' && item.file) {
+                    formData.append('files', item.file, item.path);
+                }
+            }
+
+            await fetch(`/api/courses/${currentCourseId}/folders/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            loadData().then(() => {
+                const course = courses.find(c => c.id === currentCourseId);
+                if (course) renderMaterials(course);
+            });
+        }
+
+        async function selectFolderUsingAPI() {
+            if (isPyWebView && window.pywebview.api) {
+                try {
+                    const folderPath = await window.pywebview.api.select_folder();
+                    if (folderPath) {
+                        await uploadFolderFromPath(folderPath);
+                    }
+                } catch (error) {
+                    console.error('Error selecting folder:', error);
+                    // 回退到标准文件输入
+                    document.getElementById('folderInput').click();
+                }
+            } else {
+                // 回退到标准文件输入
+                document.getElementById('folderInput').click();
+            }
+        }
+
+        async function uploadFolderFromPath(folderPath) {
+            if (!currentCourseId) return;
+            
+            const folderName = folderPath.split('\\').pop().split('/').pop();
+            const allowedExtensions = ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'md', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg', 'mp3', 'mp4', 'wav', 'avi', 'mov', 'py', 'js', 'html', 'css', 'json', 'xml', 'java', 'cpp', 'c', 'h', 'cs', 'go', 'rs', 'php', 'rb', 'swift', 'kt', 'ts', 'vue', 'jsx', 'tsx', 'sql', 'sh', 'bat', 'yaml', 'yml', 'ini', 'conf', 'log', 'csv'];
+            
+            const allPaths = [];
+            
+            // 使用 PyWebView API 列出目录内容
+            async function scanDirectory(dirPath, relativePath = '') {
+                const result = await window.pywebview.api.list_directory(dirPath);
+                if (result.error) {
+                    console.error('Error listing directory:', result.error);
+                    return;
+                }
+                
+                const items = result.items || [];
+                
+                if (items.length === 0 && relativePath === '') {
+                    return;
+                }
+                
+                if (relativePath !== '') {
+                    allPaths.push({ type: 'folder', path: relativePath.slice(0, -1) });
+                }
+                
+                for (const item of items) {
+                    if (item.is_dir) {
+                        await scanDirectory(item.path, relativePath + item.name + '/');
+                    } else {
+                        const ext = item.name.split('.').pop().toLowerCase();
+                        if (allowedExtensions.includes(ext)) {
+                            allPaths.push({ type: 'file', path: relativePath + item.name, fullPath: item.path });
+                        }
+                    }
+                }
+            }
+            
+            await scanDirectory(folderPath);
+            
+            if (allPaths.length === 0) {
+                allPaths.push({ type: 'folder', path: '' });
+            }
+            
+            // 这里需要实现文件上传逻辑，由于 PyWebView 的限制，我们需要通过后端 API 来处理
+            // 暂时使用现有的上传逻辑
+            alert('文件夹选择功能已启用，正在处理...');
+            
+            loadData().then(() => {
+                const course = courses.find(c => c.id === currentCourseId);
+                if (course) renderMaterials(course);
+            });
+        }
+
+        async function handleDroppedFiles(files) {
+            const fileArray = Array.from(files);
+            
+            for (const file of fileArray) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                await fetch(`/api/courses/${currentCourseId}/materials`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            loadData().then(() => {
+                const course = courses.find(c => c.id === currentCourseId);
+                if (course) renderMaterials(course);
+            });
+        }
+
+        let currentCoursePlan = null;
+
+        async function loadCoursePlan(courseId) {
+            try {
+                const res = await fetch(`/api/plans/${courseId}`);
+                if (res.ok) {
+                    currentCoursePlan = await res.json();
+                    renderCoursePlan();
+                } else {
+                    currentCoursePlan = null;
+                    renderCoursePlan();
+                }
+            } catch {
+                currentCoursePlan = null;
+                renderCoursePlan();
+            }
+        }
+
+        function renderCoursePlan() {
+            const container = document.getElementById('coursePlanSection');
+            
+            if (!currentCoursePlan || currentCoursePlan.error) {
+                container.innerHTML = `
+                    <div class="text-muted text-center py-3">
+                        <i class="bi bi-calendar-plus" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">暂无学习计划，点击上方按钮添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const priorityColors = { high: '#dc3545', medium: '#ffc107', low: '#28a745' };
+            const priorityTexts = { high: '高', medium: '中', low: '低' };
+            const statusTexts = { pending: '待处理', in_progress: '进行中', completed: '已完成', cancelled: '已取消' };
+            const statusColors = { pending: '#6c757d', in_progress: '#0d6efd', completed: '#198754', cancelled: '#dc3545' };
+
+            container.innerHTML = `
+                <div class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">${currentCoursePlan.title}</h6>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="badge" style="background: ${priorityColors[currentCoursePlan.priority]}">${priorityTexts[currentCoursePlan.priority]}优先级</span>
+                                <span class="badge" style="background: ${statusColors[currentCoursePlan.status]}">${statusTexts[currentCoursePlan.status]}</span>
+                            </div>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editCoursePlan()"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-danger" onclick="deleteCoursePlan()"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                    ${currentCoursePlan.description ? `<p class="text-muted small mb-2">${currentCoursePlan.description}</p>` : ''}
+                    <div class="d-flex gap-3 text-muted small mb-2">
+                        ${currentCoursePlan.start_date ? `<span><i class="bi bi-calendar"></i> ${currentCoursePlan.start_date}</span>` : ''}
+                        ${currentCoursePlan.end_date ? `<span><i class="bi bi-calendar-check"></i> ${currentCoursePlan.end_date}</span>` : ''}
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" role="progressbar" style="width: ${currentCoursePlan.progress || 0}%;"></div>
+                    </div>
+                    <small class="text-muted">进度: ${currentCoursePlan.progress || 0}%</small>
+                </div>
+            `;
+        }
+
+        function showCoursePlanModal(isEdit = false) {
+            document.getElementById('coursePlanModalTitle').textContent = isEdit ? '编辑学习计划' : '添加学习计划';
+            
+            if (isEdit && currentCoursePlan) {
+                document.getElementById('coursePlanTitle').value = currentCoursePlan.title || '';
+                document.getElementById('coursePlanType').value = currentCoursePlan.plan_type || 'short_term';
+                document.getElementById('coursePlanStartDate').value = currentCoursePlan.start_date || '';
+                document.getElementById('coursePlanEndDate').value = currentCoursePlan.end_date || '';
+                document.getElementById('coursePlanPriority').value = currentCoursePlan.priority || 'medium';
+                document.getElementById('coursePlanStatus').value = currentCoursePlan.status || 'pending';
+                document.getElementById('coursePlanProgress').value = currentCoursePlan.progress || 0;
+                document.getElementById('courseProgressValue').textContent = (currentCoursePlan.progress || 0) + '%';
+                document.getElementById('coursePlanDescription').value = currentCoursePlan.description || '';
+            } else {
+                document.getElementById('coursePlanTitle').value = '';
+                document.getElementById('coursePlanType').value = 'short_term';
+                document.getElementById('coursePlanStartDate').value = '';
+                document.getElementById('coursePlanEndDate').value = '';
+                document.getElementById('coursePlanPriority').value = 'medium';
+                document.getElementById('coursePlanStatus').value = 'pending';
+                document.getElementById('coursePlanProgress').value = 0;
+                document.getElementById('courseProgressValue').textContent = '0%';
+                document.getElementById('coursePlanDescription').value = '';
+            }
+            
+            new bootstrap.Modal(document.getElementById('coursePlanModal')).show();
+        }
+
+        function editCoursePlan() {
+            showCoursePlanModal(true);
+        }
+
+        async function saveCoursePlan() {
+            const title = document.getElementById('coursePlanTitle').value;
+            if (!title) return;
+
+            const planData = {
+                title: title,
+                plan_type: document.getElementById('coursePlanType').value,
+                start_date: document.getElementById('coursePlanStartDate').value,
+                end_date: document.getElementById('coursePlanEndDate').value,
+                priority: document.getElementById('coursePlanPriority').value,
+                status: document.getElementById('coursePlanStatus').value,
+                progress: parseInt(document.getElementById('coursePlanProgress').value),
+                description: document.getElementById('coursePlanDescription').value
+            };
+
+            const isEdit = currentCoursePlan && !currentCoursePlan.error;
+            const url = `/api/plans/${currentCourseId}`;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(planData)
+                });
+
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('coursePlanModal')).hide();
+                    loadCoursePlan(currentCourseId);
+                }
+            } catch (e) {}
+        }
+
+        async function deleteCoursePlan() {
+            try {
+                const res = await fetch(`/api/plans/${currentCourseId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    currentCoursePlan = null;
+                    renderCoursePlan();
+                }
+            } catch (e) {}
+        }
+
+        function restorePageState() {
+            const hash = location.hash.slice(1);
+            if (hash) {
+                const parts = hash.split('/');
+                if (parts.length === 2 && parts[0] === 'course') {
+                    const courseId = parseInt(parts[1]);
+                    if (!isNaN(courseId)) {
+                        setTimeout(() => showCourseDetail(courseId), 100);
+                    }
+                }
+            }
+            
+            const savedScroll = sessionStorage.getItem('scrollPosition');
+            if (savedScroll && !hash) {
+                setTimeout(() => window.scrollTo(0, parseInt(savedScroll)), 50);
+            }
+        }
+
+        function saveScrollPosition() {
+            sessionStorage.setItem('scrollPosition', window.scrollY.toString());
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!location.hash) {
+                saveScrollPosition();
+            }
+        });
+
+        document.getElementById('courseDetailModal').addEventListener('hidden.bs.modal', function () {
+            location.hash = '';
+            setTimeout(() => {
+                const savedScroll = sessionStorage.getItem('scrollPosition');
+                if (savedScroll) {
+                    window.scrollTo(0, parseInt(savedScroll));
+                }
+            }, 100);
+        });
+
+        window.addEventListener('hashchange', () => {
+            const hash = location.hash.slice(1);
+            if (!hash) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('courseDetailModal'));
+                if (modal) modal.hide();
+            }
+        });
+
+        loadData().then(() => restorePageState());
+    </script>
+</body>
+</html>

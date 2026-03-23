@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信竞知识管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .sidebar {
+            background: #fff;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar-header h4 {
+            color: #fff;
+            font-weight: 700;
+        }
+        .sidebar-header small {
+            color: rgba(255,255,255,0.8);
+        }
+        .nav-item-custom {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            color: #555;
+        }
+        .nav-item-custom:hover {
+            background: #f5f5f5;
+        }
+        .nav-item-custom.active {
+            background: #e8f0fe;
+            border-left-color: #667eea;
+            color: #667eea;
+            font-weight: 500;
+        }
+        .nav-item-custom i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        .category-item {
+            padding: 10px 20px 10px 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .category-item:hover, .category-item.active {
+            background: #f5f5f5;
+            color: #333;
+        }
+        .main-content {
+            margin-left: 280px;
+            padding: 20px 30px;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .template-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .template-card:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.15);
+            transform: translateY(-2px);
+        }
+        .template-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .template-meta {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+        .difficulty-easy { background: #28a745; }
+        .difficulty-medium { background: #fd7e14; }
+        .difficulty-hard { background: #dc3545; }
+        .status-solved { color: #28a745; }
+        .status-unsolved { color: #dc3545; }
+        .status-review { color: #fd7e14; }
+        .code-block {
+            background: #f6f8fa;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+        .code-block pre {
+            margin: 0;
+            background: transparent;
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+            color: #fff;
+        }
+        .search-box {
+            background: #fff;
+            border: 1px solid #d0d0d0;
+            border-radius: 25px;
+            padding: 10px 20px;
+            color: #333;
+            width: 100%;
+        }
+        .search-box::placeholder {
+            color: #aaa;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        .tab-content-custom {
+            display: none;
+        }
+        .tab-content-custom.active {
+            display: block;
+        }
+        .form-control, .form-select {
+            background: #fff;
+            border: 1px solid #d0d0d0;
+            color: #333;
+        }
+        .form-control:focus, .form-select:focus {
+            background: #fff;
+            border-color: #667eea;
+            color: #333;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        .form-control::placeholder {
+            color: #aaa;
+        }
+        .form-select option {
+            background: #fff;
+        }
+        .modal-content {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .modal-header {
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+        .modal-header .btn-close {
+            filter: none;
+        }
+        .modal-footer {
+            border-top: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+        .resource-link {
+            display: block;
+            padding: 12px 15px;
+            background: #fff;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid #e0e0e0;
+        }
+        .resource-link:hover {
+            background: #f8f9ff;
+            color: #667eea;
+            border-color: #667eea;
+        }
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stats-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+        }
+        .info-section {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-left: 3px solid #667eea;
+        }
+        .info-section-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .info-section-content {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .prerequisite-link {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .prerequisite-link:hover {
+            color: #764ba2;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+        .complexity-tag {
+            background: #e8f4f8;
+            color: #17a2b8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+        .space-tag {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="bi bi-code-slash"></i> 信竞知识库</h4>
+            <small class="text-muted">算法竞赛学习平台</small>
+        </div>
+        <div class="nav-item-custom active" onclick="showTab('templates')">
+            <i class="bi bi-file-earmark-code"></i> 算法模板
+        </div>
+        <div id="categoryNav"></div>
+        <div class="nav-item-custom" onclick="showTab('problems')">
+            <i class="bi bi-list-check"></i> 题目记录
+        </div>
+        <div class="nav-item-custom" onclick="showTab('resources')">
+            <i class="bi bi-book"></i> 学习资源
+        </div>
+        <div class="nav-item-custom" onclick="showTab('stats')">
+            <i class="bi bi-graph-up"></i> 统计分析
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 id="pageTitle">算法模板</h3>
+                <small class="text-muted" id="pageSubtitle">管理和查看算法模板代码</small>
+            </div>
+            <div class="d-flex gap-2">
+                <input type="text" class="search-box" placeholder="搜索..." id="searchInput" style="width: 250px;" oninput="handleSearch()">
+                <button class="btn btn-primary-custom" id="addBtn" onclick="showAddModal()">
+                    <i class="bi bi-plus-lg"></i> 添加
+                </button>
+            </div>
+        </div>
+
+        <div id="templatesTab" class="tab-content-custom active">
+            <div class="row" id="templatesList"></div>
+        </div>
+
+        <div id="problemsTab" class="tab-content-custom">
+            <div class="row" id="problemsList"></div>
+        </div>
+
+        <div id="resourcesTab" class="tab-content-custom">
+            <div id="resourcesList"></div>
+        </div>
+
+        <div id="statsTab" class="tab-content-custom">
+            <div class="row" id="statsContent"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="templateModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="templateModalTitle">添加模板</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="templateId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">模板名称 *</label>
+                            <input type="text" class="form-control" id="templateName">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">分类</label>
+                            <select class="form-select" id="templateCategory" onchange="updateSubcategories()"></select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">子分类</label>
+                            <select class="form-select" id="templateSubcategory"></select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">语言</label>
+                            <select class="form-select" id="templateLanguage">
+                                <option value="go">Go</option>
+                                <option value="cpp">C++</option>
+                                <option value="python">Python</option>
+                                <option value="java">Java</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">时间复杂度</label>
+                            <input type="text" class="form-control" id="templateComplexity" placeholder="如 O(n log n)">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">空间复杂度</label>
+                            <input type="text" class="form-control" id="templateSpaceComplexity" placeholder="如 O(n)">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" id="templateDescription" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">输入说明</label>
+                            <textarea class="form-control" id="templateInput" rows="3" placeholder="描述算法需要的输入数据格式和条件"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">输出说明</label>
+                            <textarea class="form-control" id="templateOutput" rows="3" placeholder="描述算法的输出结果"></textarea>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">前置算法（逗号分隔，如：并查集, 快速幂）</label>
+                        <input type="text" class="form-control" id="templatePrerequisites" placeholder="使用此算法前需要掌握的算法">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">详细说明</label>
+                        <textarea class="form-control" id="templateDetails" rows="4" placeholder="算法的详细解释、使用场景、注意事项等"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">代码 *</label>
+                        <textarea class="form-control" id="templateCode" rows="12" style="font-family: 'Fira Code', monospace;"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">相关题目链接（每行一个）</label>
+                        <textarea class="form-control" id="templateProblems" rows="3" placeholder="https://codeforces.com/problemset/problem/..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="saveTemplate()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="problemModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="problemModalTitle">添加题目</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="problemId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">题目名称 *</label>
+                            <input type="text" class="form-control" id="problemTitle">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">来源</label>
+                            <input type="text" class="form-control" id="problemSource" placeholder="CF/洛谷/AtCoder">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">难度</label>
+                            <select class="form-select" id="problemDifficulty">
+                                <option value="easy">简单</option>
+                                <option value="medium">中等</option>
+                                <option value="hard">困难</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">题目链接</label>
+                            <input type="text" class="form-control" id="problemUrl">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" id="problemStatus">
+                                <option value="unsolved">未解决</option>
+                                <option value="solved">已解决</option>
+                                <option value="review">待复习</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">语言</label>
+                            <select class="form-select" id="problemLanguage">
+                                <option value="go">Go</option>
+                                <option value="cpp">C++</option>
+                                <option value="python">Python</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">标签（逗号分隔）</label>
+                        <input type="text" class="form-control" id="problemTags" placeholder="DP, 图论, 最短路">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">题目描述</label>
+                        <textarea class="form-control" id="problemDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">解题思路</label>
+                        <textarea class="form-control" id="problemSolution" rows="4"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">代码</label>
+                        <textarea class="form-control" id="problemCode" rows="12" style="font-family: 'Fira Code', monospace;"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">笔记</label>
+                        <textarea class="form-control" id="problemNotes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="saveProblem()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="resourceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加资源</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">标题 *</label>
+                        <input type="text" class="form-control" id="resourceTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">链接 *</label>
+                        <input type="text" class="form-control" id="resourceUrl">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">类型</label>
+                        <select class="form-select" id="resourceType">
+                            <option value="article">文章</option>
+                            <option value="video">视频</option>
+                            <option value="book">书籍</option>
+                            <option value="course">课程</option>
+                            <option value="tool">工具</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" id="resourceDescription" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">标签（逗号分隔）</label>
+                        <input type="text" class="form-control" id="resourceTags">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="saveResource()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewModalTitle">详情</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewModalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="planModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); color: white;">
+                    <h5 class="modal-title" id="planModalTitle">添加计划</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="planItemId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">计划标题 *</label>
+                        <input type="text" class="form-control" id="planTitle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">计划类型</label>
+                        <select class="form-select" id="planType">
+                            <option value="short_term">短期计划</option>
+                            <option value="mid_term">中期计划</option>
+                            <option value="long_term">长期计划</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">开始日期</label>
+                            <input type="date" class="form-control" id="planStartDate">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">结束日期</label>
+                            <input type="date" class="form-control" id="planEndDate">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">优先级</label>
+                            <select class="form-select" id="planPriority">
+                                <option value="high">高</option>
+                                <option value="medium" selected>中</option>
+                                <option value="low">低</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">状态</label>
+                            <select class="form-select" id="planStatus">
+                                <option value="pending">待处理</option>
+                                <option value="in_progress">进行中</option>
+                                <option value="completed">已完成</option>
+                                <option value="cancelled">已取消</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">进度 (%)</label>
+                        <input type="range" class="form-range" id="planProgress" min="0" max="100" value="0" oninput="document.getElementById('progressValue').textContent = this.value + '%'">
+                        <span id="progressValue" class="text-muted">0%</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">描述</label>
+                        <textarea class="form-control" id="planDescription" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="savePlan()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let data = { categories: [], templates: [], problems: [], resources: [] };
+        let currentTab = 'templates';
+        let currentCategory = null;
+        let currentPlan = null;
+
+        async function loadData() {
+            const res = await fetch('/api/data');
+            data = await res.json();
+            renderCategories();
+            renderAll();
+        }
+
+        function renderCategories() {
+            const nav = document.getElementById('categoryNav');
+            nav.innerHTML = data.categories.map(cat => `
+                <div class="nav-item-custom" onclick="filterByCategory(${cat.id})" style="border-left-color: ${cat.color}">
+                    <i class="${cat.icon}" style="color: ${cat.color}"></i> ${cat.name}
+                </div>
+            `).join('');
+            
+            updateCategorySelects();
+        }
+
+        function updateCategorySelects() {
+            const catSelect = document.getElementById('templateCategory');
+            catSelect.innerHTML = '<option value="">无分类</option>' + 
+                data.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        function updateSubcategories() {
+            const catId = parseInt(document.getElementById('templateCategory').value);
+            const subSelect = document.getElementById('templateSubcategory');
+            const category = data.categories.find(c => c.id === catId);
+            
+            if (category && category.subcategories) {
+                subSelect.innerHTML = '<option value="">无子分类</option>' +
+                    category.subcategories.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            } else {
+                subSelect.innerHTML = '<option value="">无子分类</option>';
+            }
+        }
+
+        function showTab(tab) {
+            currentTab = tab;
+            currentCategory = null;
+            
+            document.querySelectorAll('.nav-item-custom').forEach(el => el.classList.remove('active'));
+            event.target.closest('.nav-item-custom')?.classList.add('active');
+            
+            document.querySelectorAll('.tab-content-custom').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+            
+            const titles = {
+                templates: ['算法模板', '管理和查看算法模板代码'],
+                problems: ['题目记录', '记录刷题进度和解题思路'],
+                resources: ['学习资源', '收集整理学习资料'],
+                stats: ['统计分析', '查看学习进度统计']
+            };
+            
+            document.getElementById('pageTitle').textContent = titles[tab][0];
+            document.getElementById('pageSubtitle').textContent = titles[tab][1];
+            document.getElementById('addBtn').style.display = tab === 'stats' ? 'none' : 'block';
+            
+            renderAll();
+        }
+
+        function filterByCategory(catId) {
+            currentCategory = catId;
+            currentTab = 'templates';
+            
+            document.querySelectorAll('.nav-item-custom').forEach(el => el.classList.remove('active'));
+            event.target.closest('.nav-item-custom')?.classList.add('active');
+            
+            document.querySelectorAll('.tab-content-custom').forEach(el => el.classList.remove('active'));
+            document.getElementById('templatesTab').classList.add('active');
+            
+            const category = data.categories.find(c => c.id === catId);
+            document.getElementById('pageTitle').textContent = category ? category.name : '算法模板';
+            document.getElementById('pageSubtitle').textContent = '按分类筛选模板';
+            
+            renderTemplates();
+        }
+
+        function renderAll() {
+            renderTemplates();
+            renderProblems();
+            renderResources();
+            renderStats();
+        }
+
+        function renderTemplates() {
+            const container = document.getElementById('templatesList');
+            let templates = data.templates;
+            
+            if (currentCategory) {
+                templates = templates.filter(t => t.category_id === currentCategory);
+            }
+            
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            if (search && currentTab === 'templates') {
+                templates = templates.filter(t => 
+                    t.name.toLowerCase().includes(search) ||
+                    t.description?.toLowerCase().includes(search)
+                );
+            }
+            
+            if (templates.length === 0) {
+                container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-file-earmark-code"></i><p>暂无模板</p></div></div>`;
+                return;
+            }
+            
+            container.innerHTML = templates.map(t => {
+                const category = data.categories.find(c => c.id === t.category_id);
+                const subcategory = category?.subcategories?.find(s => s.id === t.subcategory_id);
+                
+                return `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="template-card" onclick="viewTemplate(${t.id})">
+                            <div class="template-title">${t.name}</div>
+                            <div class="template-meta">
+                                ${category ? `<span class="tag" style="background:${category.color}">${category.name}</span>` : ''}
+                                ${subcategory ? `<span class="tag" style="background:rgba(0,0,0,0.1);color:#666">${subcategory.name}</span>` : ''}
+                            </div>
+                            <div class="mt-2">
+                                ${t.complexity ? `<span class="complexity-tag"><i class="bi bi-clock"></i> ${t.complexity}</span>` : ''}
+                                ${t.space_complexity ? `<span class="space-tag"><i class="bi bi-hdd"></i> ${t.space_complexity}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderProblems() {
+            const container = document.getElementById('problemsList');
+            let problems = data.problems;
+            
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            if (search && currentTab === 'problems') {
+                problems = problems.filter(p => 
+                    p.title.toLowerCase().includes(search) ||
+                    p.tags?.some(tag => tag.toLowerCase().includes(search))
+                );
+            }
+            
+            if (problems.length === 0) {
+                container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-list-check"></i><p>暂无题目记录</p></div></div>`;
+                return;
+            }
+            
+            container.innerHTML = problems.map(p => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="template-card" onclick="viewProblem(${p.id})">
+                        <div class="template-title">
+                            ${p.title}
+                            <span class="tag difficulty-${p.difficulty}">${({'easy':'简单','medium':'中等','hard':'困难'}[p.difficulty] || p.difficulty)}</span>
+                        </div>
+                        <div class="template-meta">
+                            <span class="status-${p.status}"><i class="bi bi-${p.status === 'solved' ? 'check-circle' : p.status === 'review' ? 'clock' : 'circle'}"></i> 
+                                ${({'solved':'已解决','unsolved':'未解决','review':'待复习'}[p.status] || p.status)}
+                            </span>
+                            ${p.source ? ` · ${p.source}` : ''}
+                        </div>
+                        ${p.tags?.length ? `<div class="mt-2">${p.tags.map(tag => `<span class="tag" style="background:rgba(255,255,255,0.2)">${tag}</span>`).join('')}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderResources() {
+            const container = document.getElementById('resourcesList');
+            
+            if (data.resources.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="bi bi-book"></i><p>暂无学习资源</p></div>`;
+                return;
+            }
+            
+            const typeIcons = { article: 'bi-file-text', video: 'bi-play-circle', book: 'bi-book', course: 'bi-mortarboard', tool: 'bi-tools' };
+            
+            container.innerHTML = data.resources.map(r => `
+                <a href="${r.url}" target="_blank" class="resource-link">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi ${typeIcons[r.type] || 'bi-link-45deg'} me-2"></i>
+                            <strong>${r.title}</strong>
+                            <br><small class="text-muted">${r.description || ''}</small>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        function renderStats() {
+            const container = document.getElementById('statsContent');
+            
+            const solved = data.problems.filter(p => p.status === 'solved').length;
+            const total = data.problems.length;
+            const templates = data.templates.length;
+            
+            const categoryStats = data.categories.map(cat => {
+                const count = data.templates.filter(t => t.category_id === cat.id).length;
+                return { name: cat.name, count, color: cat.color };
+            }).filter(c => c.count > 0);
+            
+            container.innerHTML = `
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="stats-number">${total}</div>
+                        <div class="stats-label">题目总数</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="stats-number">${solved}</div>
+                        <div class="stats-label">已解决</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="stats-number">${total > 0 ? Math.round(solved / total * 100) : 0}%</div>
+                        <div class="stats-label">完成率</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="stats-number">${templates}</div>
+                        <div class="stats-label">模板数量</div>
+                    </div>
+                </div>
+                <div class="col-12 mt-4">
+                    <div class="card">
+                        <div class="card-header">各分类模板数量</div>
+                        <div class="card-body">
+                            ${categoryStats.map(c => `
+                                <div class="d-flex align-items-center mb-2">
+                                    <span style="width: 120px;">${c.name}</span>
+                                    <div class="progress flex-grow-1" style="height: 20px;">
+                                        <div class="progress-bar" style="width: ${c.count / Math.max(...categoryStats.map(x => x.count)) * 100}%; background: ${c.color}">${c.count}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleSearch() {
+            if (currentTab === 'templates') renderTemplates();
+            else if (currentTab === 'problems') renderProblems();
+        }
+
+        function showAddModal() {
+            if (currentTab === 'templates') {
+                document.getElementById('templateModalTitle').textContent = '添加模板';
+                document.getElementById('templateId').value = '';
+                document.getElementById('templateName').value = '';
+                document.getElementById('templateCategory').value = '';
+                document.getElementById('templateSubcategory').innerHTML = '<option value="">无子分类</option>';
+                document.getElementById('templateLanguage').value = 'go';
+                document.getElementById('templateComplexity').value = '';
+                document.getElementById('templateSpaceComplexity').value = '';
+                document.getElementById('templateDescription').value = '';
+                document.getElementById('templateInput').value = '';
+                document.getElementById('templateOutput').value = '';
+                document.getElementById('templatePrerequisites').value = '';
+                document.getElementById('templateDetails').value = '';
+                document.getElementById('templateCode').value = '';
+                document.getElementById('templateProblems').value = '';
+                
+                const modalEl = document.getElementById('templateModal');
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal) modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            } else if (currentTab === 'problems') {
+                document.getElementById('problemModalTitle').textContent = '添加题目';
+                document.getElementById('problemId').value = '';
+                document.getElementById('problemTitle').value = '';
+                document.getElementById('problemSource').value = '';
+                document.getElementById('problemDifficulty').value = 'medium';
+                document.getElementById('problemUrl').value = '';
+                document.getElementById('problemStatus').value = 'unsolved';
+                document.getElementById('problemLanguage').value = 'go';
+                document.getElementById('problemTags').value = '';
+                document.getElementById('problemDescription').value = '';
+                document.getElementById('problemSolution').value = '';
+                document.getElementById('problemCode').value = '';
+                document.getElementById('problemNotes').value = '';
+                
+                const modalEl = document.getElementById('problemModal');
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal) modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            } else if (currentTab === 'resources') {
+                document.getElementById('resourceTitle').value = '';
+                document.getElementById('resourceUrl').value = '';
+                document.getElementById('resourceType').value = 'article';
+                document.getElementById('resourceDescription').value = '';
+                document.getElementById('resourceTags').value = '';
+                
+                const modalEl = document.getElementById('resourceModal');
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal) modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        }
+
+        async function saveTemplate() {
+            const id = document.getElementById('templateId').value;
+            const templateData = {
+                name: document.getElementById('templateName').value,
+                category_id: parseInt(document.getElementById('templateCategory').value) || null,
+                subcategory_id: parseInt(document.getElementById('templateSubcategory').value) || null,
+                language: document.getElementById('templateLanguage').value,
+                complexity: document.getElementById('templateComplexity').value,
+                space_complexity: document.getElementById('templateSpaceComplexity').value,
+                description: document.getElementById('templateDescription').value,
+                input_desc: document.getElementById('templateInput').value,
+                output_desc: document.getElementById('templateOutput').value,
+                prerequisites: document.getElementById('templatePrerequisites').value.split(',').map(s => s.trim()).filter(s => s),
+                details: document.getElementById('templateDetails').value,
+                code: document.getElementById('templateCode').value,
+                problems: document.getElementById('templateProblems').value.split('\n').filter(s => s.trim())
+            };
+            
+            if (!templateData.name || !templateData.code) return;
+            
+            let res;
+            if (id) {
+                res = await fetch(`/api/templates/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(templateData)
+                });
+            } else {
+                res = await fetch('/api/templates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(templateData)
+                });
+            }
+            
+            if (res.ok) {
+                const modalEl = document.getElementById('templateModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                loadData();
+            }
+        }
+
+        async function saveProblem() {
+            const id = document.getElementById('problemId').value;
+            const problemData = {
+                title: document.getElementById('problemTitle').value,
+                source: document.getElementById('problemSource').value,
+                difficulty: document.getElementById('problemDifficulty').value,
+                url: document.getElementById('problemUrl').value,
+                status: document.getElementById('problemStatus').value,
+                language: document.getElementById('problemLanguage').value,
+                tags: document.getElementById('problemTags').value.split(',').map(s => s.trim()).filter(s => s),
+                description: document.getElementById('problemDescription').value,
+                solution: document.getElementById('problemSolution').value,
+                code: document.getElementById('problemCode').value,
+                notes: document.getElementById('problemNotes').value
+            };
+            
+            if (!problemData.title) return;
+            
+            let res;
+            if (id) {
+                res = await fetch(`/api/problems/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(problemData)
+                });
+            } else {
+                res = await fetch('/api/problems', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(problemData)
+                });
+            }
+            
+            if (res.ok) {
+                const modalEl = document.getElementById('problemModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                loadData();
+            }
+        }
+
+        async function saveResource() {
+            const resourceData = {
+                title: document.getElementById('resourceTitle').value,
+                url: document.getElementById('resourceUrl').value,
+                type: document.getElementById('resourceType').value,
+                description: document.getElementById('resourceDescription').value,
+                tags: document.getElementById('resourceTags').value.split(',').map(s => s.trim()).filter(s => s)
+            };
+            
+            if (!resourceData.title || !resourceData.url) return;
+            
+            const res = await fetch('/api/resources', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(resourceData)
+            });
+            
+            if (res.ok) {
+                const modalEl = document.getElementById('resourceModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                loadData();
+            }
+        }
+
+        function viewTemplate(id) {
+            const t = data.templates.find(x => x.id === id);
+            if (!t) return;
+            
+            location.hash = `template/${id}`;
+            
+            const category = data.categories.find(c => c.id === t.category_id);
+            const subcategory = category?.subcategories?.find(s => s.id === t.subcategory_id);
+            
+            document.getElementById('viewModalTitle').textContent = t.name;
+            
+            let prerequisitesHtml = '';
+            if (t.prerequisites && t.prerequisites.length > 0) {
+                prerequisitesHtml = t.prerequisites.map(pName => {
+                    const prereq = data.templates.find(x => x.name === pName);
+                    if (prereq) {
+                        return `<span class="prerequisite-link" onclick="viewTemplate(${prereq.id})">${pName}</span>`;
+                    }
+                    return `<span>${pName}</span>`;
+                }).join('、');
+            }
+            
+            document.getElementById('viewModalContent').innerHTML = `
+                <div class="mb-3">
+                    ${category ? `<span class="tag" style="background:${category.color}">${category.name}</span>` : ''}
+                    ${subcategory ? `<span class="tag" style="background:rgba(0,0,0,0.1);color:#666">${subcategory.name}</span>` : ''}
+                    ${t.complexity ? `<span class="complexity-tag"><i class="bi bi-clock"></i> 时间: ${t.complexity}</span>` : ''}
+                    ${t.space_complexity ? `<span class="space-tag"><i class="bi bi-hdd"></i> 空间: ${t.space_complexity}</span>` : ''}
+                    <span class="tag" style="background:#6f42c1">${t.language}</span>
+                </div>
+                ${t.description ? `<p class="mb-3">${t.description}</p>` : ''}
+                
+                ${t.input_desc ? `
+                <div class="info-section">
+                    <div class="info-section-title"><i class="bi bi-box-arrow-in-right"></i> 输入说明</div>
+                    <div class="info-section-content">${t.input_desc}</div>
+                </div>
+                ` : ''}
+                
+                ${t.output_desc ? `
+                <div class="info-section">
+                    <div class="info-section-title"><i class="bi bi-box-arrow-right"></i> 输出说明</div>
+                    <div class="info-section-content">${t.output_desc}</div>
+                </div>
+                ` : ''}
+                
+                ${prerequisitesHtml ? `
+                <div class="info-section">
+                    <div class="info-section-title"><i class="bi bi-diagram-2"></i> 前置算法</div>
+                    <div class="info-section-content">${prerequisitesHtml}</div>
+                </div>
+                ` : ''}
+                
+                ${t.details ? `
+                <div class="info-section">
+                    <div class="info-section-title"><i class="bi bi-info-circle"></i> 详细说明</div>
+                    <div class="info-section-content">${t.details}</div>
+                </div>
+                ` : ''}
+                
+                <div class="info-section">
+                    <div class="info-section-title"><i class="bi bi-code-slash"></i> 代码实现</div>
+                    <div class="code-block"><pre><code class="language-${t.language === 'cpp' ? 'cpp' : t.language}">${escapeHtml(t.code)}</code></pre></div>
+                </div>
+                
+                ${t.problems?.length ? `
+                    <div class="mt-3">
+                        <strong>相关题目：</strong>
+                        ${t.problems.map(url => `<a href="${url}" target="_blank" class="tag" style="background:rgba(255,255,255,0.1)">${url}</a>`).join('')}
+                    </div>
+                ` : ''}
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-info" onclick="showPlanModalForTemplate(${t.id})"><i class="bi bi-calendar-check"></i> 计划</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editTemplate(${t.id})"><i class="bi bi-pencil"></i> 编辑</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(${t.id})"><i class="bi bi-trash"></i> 删除</button>
+                </div>
+            `;
+            
+            document.querySelectorAll('#viewModalContent pre code').forEach(block => {
+                try { hljs.highlightElement(block); } catch(e) {}
+            });
+            
+            const modalEl = document.getElementById('viewModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function viewProblem(id) {
+            const p = data.problems.find(x => x.id === id);
+            if (!p) return;
+            
+            location.hash = `problem/${id}`;
+            
+            document.getElementById('viewModalTitle').textContent = p.title;
+            document.getElementById('viewModalContent').innerHTML = `
+                <div class="mb-3">
+                    <span class="tag difficulty-${p.difficulty}">${({'easy':'简单','medium':'中等','hard':'困难'}[p.difficulty])}</span>
+                    <span class="status-${p.status} tag" style="background:rgba(255,255,255,0.1)">
+                        <i class="bi bi-${p.status === 'solved' ? 'check-circle' : p.status === 'review' ? 'clock' : 'circle'}"></i>
+                        ${({'solved':'已解决','unsolved':'未解决','review':'待复习'}[p.status])}
+                    </span>
+                    ${p.source ? `<span class="tag" style="background:rgba(255,255,255,0.2)">${p.source}</span>` : ''}
+                </div>
+                ${p.url ? `<p><a href="${p.url}" target="_blank"><i class="bi bi-link-45deg"></i> 题目链接</a></p>` : ''}
+                ${p.description ? `<div class="mb-3"><strong>题目描述：</strong><p>${p.description}</p></div>` : ''}
+                ${p.solution ? `<div class="mb-3"><strong>解题思路：</strong><p>${p.solution}</p></div>` : ''}
+                ${p.code ? `<div class="code-block"><pre><code class="language-${p.language === 'cpp' ? 'cpp' : p.language}">${escapeHtml(p.code)}</code></pre></div>` : ''}
+                ${p.notes ? `<div class="mt-3"><strong>笔记：</strong><p>${p.notes}</p></div>` : ''}
+                ${p.tags?.length ? `<div class="mt-3">${p.tags.map(tag => `<span class="tag" style="background:rgba(255,255,255,0.2)">${tag}</span>`).join('')}</div>` : ''}
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-info" onclick="showPlanModalForProblem(${p.id})"><i class="bi bi-calendar-check"></i> 计划</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editProblem(${p.id})"><i class="bi bi-pencil"></i> 编辑</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteProblem(${p.id})"><i class="bi bi-trash"></i> 删除</button>
+                </div>
+            `;
+            
+            document.querySelectorAll('#viewModalContent pre code').forEach(block => {
+                try { hljs.highlightElement(block); } catch(e) {}
+            });
+            
+            const modalEl = document.getElementById('viewModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function editTemplate(id) {
+            const t = data.templates.find(x => x.id === id);
+            if (!t) return;
+            
+            const viewModalEl = document.getElementById('viewModal');
+            const viewModal = bootstrap.Modal.getInstance(viewModalEl);
+            if (viewModal) viewModal.hide();
+            
+            document.getElementById('templateModalTitle').textContent = '编辑模板';
+            document.getElementById('templateId').value = t.id;
+            document.getElementById('templateName').value = t.name;
+            document.getElementById('templateCategory').value = t.category_id || '';
+            updateSubcategories();
+            document.getElementById('templateSubcategory').value = t.subcategory_id || '';
+            document.getElementById('templateLanguage').value = t.language || 'go';
+            document.getElementById('templateComplexity').value = t.complexity || '';
+            document.getElementById('templateSpaceComplexity').value = t.space_complexity || '';
+            document.getElementById('templateDescription').value = t.description || '';
+            document.getElementById('templateInput').value = t.input_desc || '';
+            document.getElementById('templateOutput').value = t.output_desc || '';
+            document.getElementById('templatePrerequisites').value = (t.prerequisites || []).join(', ');
+            document.getElementById('templateDetails').value = t.details || '';
+            document.getElementById('templateCode').value = t.code || '';
+            document.getElementById('templateProblems').value = (t.problems || []).join('\n');
+            
+            const modalEl = document.getElementById('templateModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function editProblem(id) {
+            const p = data.problems.find(x => x.id === id);
+            if (!p) return;
+            
+            const viewModalEl = document.getElementById('viewModal');
+            const viewModal = bootstrap.Modal.getInstance(viewModalEl);
+            if (viewModal) viewModal.hide();
+            
+            document.getElementById('problemModalTitle').textContent = '编辑题目';
+            document.getElementById('problemId').value = p.id;
+            document.getElementById('problemTitle').value = p.title;
+            document.getElementById('problemSource').value = p.source || '';
+            document.getElementById('problemDifficulty').value = p.difficulty || 'medium';
+            document.getElementById('problemUrl').value = p.url || '';
+            document.getElementById('problemStatus').value = p.status || 'unsolved';
+            document.getElementById('problemLanguage').value = p.language || 'go';
+            document.getElementById('problemTags').value = (p.tags || []).join(', ');
+            document.getElementById('problemDescription').value = p.description || '';
+            document.getElementById('problemSolution').value = p.solution || '';
+            document.getElementById('problemCode').value = p.code || '';
+            document.getElementById('problemNotes').value = p.notes || '';
+            
+            const modalEl = document.getElementById('problemModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        async function deleteTemplate(id) {
+            if (!confirm('确定要删除这个模板吗？')) return;
+            
+            const res = await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                const modalEl = document.getElementById('viewModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                loadData();
+            }
+        }
+
+        async function deleteProblem(id) {
+            const res = await fetch(`/api/problems/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                const modalEl = document.getElementById('viewModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                loadData();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showPlanModalForTemplate(id) {
+            const t = data.templates.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('planItemId').value = 'template_' + id;
+            document.getElementById('planModalTitle').textContent = '添加学习计划 - ' + t.name;
+            document.getElementById('planTitle').value = '学习: ' + t.name;
+            resetPlanForm();
+            loadPlan('template_' + id);
+        }
+
+        function showPlanModalForProblem(id) {
+            const p = data.problems.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('planItemId').value = 'problem_' + id;
+            document.getElementById('planModalTitle').textContent = '添加做题计划 - ' + p.title;
+            document.getElementById('planTitle').value = '做题: ' + p.title;
+            resetPlanForm();
+            loadPlan('problem_' + id);
+        }
+
+        function resetPlanForm() {
+            document.getElementById('planType').value = 'short_term';
+            document.getElementById('planStartDate').value = '';
+            document.getElementById('planEndDate').value = '';
+            document.getElementById('planPriority').value = 'medium';
+            document.getElementById('planStatus').value = 'pending';
+            document.getElementById('planProgress').value = 0;
+            document.getElementById('progressValue').textContent = '0%';
+            document.getElementById('planDescription').value = '';
+        }
+
+        async function loadPlan(itemId) {
+            try {
+                const res = await fetch(`/api/plans/${encodeURIComponent(itemId)}`);
+                if (res.ok) {
+                    currentPlan = await res.json();
+                    if (currentPlan && !currentPlan.error) {
+                        document.getElementById('planModalTitle').textContent = '编辑计划';
+                        document.getElementById('planTitle').value = currentPlan.title || '';
+                        document.getElementById('planType').value = currentPlan.plan_type || 'short_term';
+                        document.getElementById('planStartDate').value = currentPlan.start_date || '';
+                        document.getElementById('planEndDate').value = currentPlan.end_date || '';
+                        document.getElementById('planPriority').value = currentPlan.priority || 'medium';
+                        document.getElementById('planStatus').value = currentPlan.status || 'pending';
+                        document.getElementById('planProgress').value = currentPlan.progress || 0;
+                        document.getElementById('progressValue').textContent = (currentPlan.progress || 0) + '%';
+                        document.getElementById('planDescription').value = currentPlan.description || '';
+                    }
+                }
+            } catch (e) {
+                console.error('加载计划失败', e);
+            }
+            
+            const modalEl = document.getElementById('planModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        async function savePlan() {
+            const itemId = document.getElementById('planItemId').value;
+            const title = document.getElementById('planTitle').value;
+            if (!title) { alert('请输入计划标题！'); return; }
+
+            const planData = {
+                title: title,
+                plan_type: document.getElementById('planType').value,
+                start_date: document.getElementById('planStartDate').value,
+                end_date: document.getElementById('planEndDate').value,
+                priority: document.getElementById('planPriority').value,
+                status: document.getElementById('planStatus').value,
+                progress: parseInt(document.getElementById('planProgress').value),
+                description: document.getElementById('planDescription').value
+            };
+
+            const isEdit = currentPlan && !currentPlan.error;
+            const url = `/api/plans/${encodeURIComponent(itemId)}`;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(planData)
+                });
+
+                if (res.ok) {
+                    const modalEl = document.getElementById('planModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+            } catch (e) {}
+        }
+
+        function restorePageState() {
+            const hash = location.hash.slice(1);
+            if (hash) {
+                const parts = hash.split('/');
+                if (parts.length === 2) {
+                    const type = parts[0];
+                    const id = parseInt(parts[1]);
+                    if (!isNaN(id)) {
+                        setTimeout(() => {
+                            if (type === 'template') viewTemplate(id);
+                            else if (type === 'problem') viewProblem(id);
+                        }, 100);
+                    }
+                }
+            } else {
+                const savedScroll = sessionStorage.getItem('algorithmScrollPosition');
+                if (savedScroll) {
+                    setTimeout(() => window.scrollTo(0, parseInt(savedScroll)), 50);
+                }
+            }
+        }
+
+        function saveScrollPosition() {
+            if (!location.hash) {
+                sessionStorage.setItem('algorithmScrollPosition', window.scrollY.toString());
+            }
+        }
+
+        window.addEventListener('scroll', saveScrollPosition);
+
+        document.getElementById('viewModal').addEventListener('hidden.bs.modal', function () {
+            location.hash = '';
+            setTimeout(() => {
+                const savedScroll = sessionStorage.getItem('algorithmScrollPosition');
+                if (savedScroll) {
+                    window.scrollTo(0, parseInt(savedScroll));
+                }
+            }, 100);
+        });
+
+        document.getElementById('planModal').addEventListener('hidden.bs.modal', function () {
+            currentPlan = null;
+        });
+
+        window.addEventListener('hashchange', () => {
+            const hash = location.hash.slice(1);
+            if (!hash) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('viewModal'));
+                if (modal) modal.hide();
+            }
+        });
+
+        loadData().then(() => restorePageState());
+    </script>
+</body>
+</html>

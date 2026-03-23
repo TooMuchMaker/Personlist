@@ -1,0 +1,60 @@
+{
+  "app": {
+    "name": "TRAEWORK",
+    "version": "1.0.0",
+    "author": "TRAEWORK Team",
+    "debug": true
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "ports": {
+      "main": 5000,
+      "plan": 5001,
+      "course": 5002,
+      "algorithm": 5003,
+      "project": 5004
+    }
+  },
+  "platforms": {
+    "plan": {
+      "name": "计划管理",
+      "description": "管理日常计划、任务安排和进度跟踪",
+      "icon": "calendar",
+      "enabled": true,
+      "auto_start": true
+    },
+    "course": {
+      "name": "学校课程",
+      "description": "管理学校课程资料、作业和学习资源",
+      "icon": "book",
+      "enabled": true,
+      "auto_start": true
+    },
+    "algorithm": {
+      "name": "信竞知识",
+      "description": "管理算法知识、竞赛技巧和代码模板",
+      "icon": "cpu",
+      "enabled": true,
+      "auto_start": false
+    },
+    "project": {
+      "name": "项目管理",
+      "description": "管理原创项目和收藏项目",
+      "icon": "folder",
+      "enabled": true,
+      "auto_start": false
+    }
+  },
+  "ui": {
+    "theme": "light",
+    "language": "zh_CN",
+    "minimize_to_tray": true,
+    "close_to_tray": true,
+    "start_with_windows": false
+  },
+  "logging": {
+    "level": "INFO",
+    "max_size_mb": 10,
+    "backup_count": 5
+  }
+}
