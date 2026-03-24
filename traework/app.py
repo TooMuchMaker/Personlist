@@ -26,10 +26,27 @@ class App:
         logger.info("Starting Flask server...")
         self.start_flask_server()
         
+        logger.info("Checking for updates...")
+        self._check_updates_on_startup()
+        
         logger.info("Starting desktop window...")
         self.run_desktop_window()
         
         logger.info("Application shutting down...")
+    
+    def _check_updates_on_startup(self):
+        """启动时检查更新（后台线程）"""
+        import threading
+        from .core.updater import updater
+        
+        def check():
+            try:
+                updater.check_for_updates()
+            except Exception as e:
+                logger.error(f"Failed to check updates on startup: {e}")
+        
+        thread = threading.Thread(target=check, daemon=True)
+        thread.start()
     
     def start_flask_server(self):
         from flask import Flask, render_template, jsonify

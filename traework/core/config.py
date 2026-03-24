@@ -96,7 +96,7 @@ class Config:
                 'version': '1.0.0',
                 'author': 'TRAEWORK Team',
                 'debug': not self._is_frozen,
-                'update_url': '',
+                'update_url': 'https://TooMuchMaker.github.io/Personlist/version.json',
                 'check_updates_on_startup': True,
             },
             'server': {

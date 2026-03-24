@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "author": "TRAEWORK Team",
     "debug": true,
-    "update_url": "http://127.0.0.1:8000/version.json",
+    "update_url": "https://TooMuchMaker.github.io/Personlist/version.json",
     "check_updates_on_startup": true
   },
   "server": {
